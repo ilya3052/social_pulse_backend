@@ -1,2 +1,3 @@
 from .groups_views import *
 from .platform_views import *
+from .models_views import *
