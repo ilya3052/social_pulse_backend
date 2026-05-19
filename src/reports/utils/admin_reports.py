@@ -44,7 +44,7 @@ def get_styles(workbook: Workbook):
     medium_load.set_font_size(14)
     medium_load.set_align('center')
     medium_load.set_align('vcenter')
-    medium_load.set_font_color('yellow')
+    medium_load.set_font_color('#ffc107')
     medium_load.set_bg_color('#F8F9FA')
     medium_load.set_border()
     medium_load.set_border_color('#BFBFBF')
