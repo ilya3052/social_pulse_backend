@@ -46,3 +46,29 @@ class Group(models.Model):
 class Platform(models.Model):
     alias = models.CharField(max_length=16, db_index=True)
     name = models.CharField(max_length=128)
+
+class PredictiveModels(models.Model):
+    RIDGE = 'Ridge Regression'
+    LASSO = 'Lasso Regression'
+    ELASTIC_NET = 'Elastic Net Regression'
+    SVR = 'Support Vector Regression'
+    GRADIENT_BOOSTING = 'Gradient Boosting Regressor'
+    model_type = (
+        (RIDGE, 'Ridge Regression'),
+        (LASSO, 'Lasso Regression'),
+        (ELASTIC_NET, 'Elastic Net Regression'),
+        (SVR, 'Support Vector Regression'),
+        (GRADIENT_BOOSTING, 'Gradient Boosting Regressor'),
+    )
+
+    predictable_variable = models.CharField(max_length=16)
+    params = models.JSONField()
+    model = models.CharField(max_length=128, choices=model_type)
+
+    r2 = models.FloatField()
+    mae = models.FloatField()
+    rmse = models.FloatField()
+    residual_std = models.FloatField()
+
+
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='predictive_models')
