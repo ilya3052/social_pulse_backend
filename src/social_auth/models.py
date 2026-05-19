@@ -24,6 +24,7 @@ class VKTokens(models.Model):
     refresh_vk_token = models.CharField(max_length=512)
     access_vk_token = models.CharField(max_length=512)
     id_vk_token = models.TextField()
+    # исправить логику времени жизни токена, так как он может быть бессрочным
     expires_in = models.IntegerField()
     added_at = models.DateTimeField(default=default_expires_at)
 
