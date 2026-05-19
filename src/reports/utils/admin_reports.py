@@ -178,10 +178,8 @@ def insert_service_account_loading(report_sheet, account_info, groups_info, titl
 
     vk, tg = groups_info.values()
     total = vk + tg
-
-    min_percentage = int(_min.get('count') / total) if total else 0
-    max_percentage = int(_max.get('count') / total) if total else 0
-
+    min_percentage = _min.get('count') / total if total else 0
+    max_percentage = _max.get('count') / total if total else 0
     if min_percentage < 0.3:
         min_style = low_load
     elif 0.3 <= min_percentage < 0.7:
