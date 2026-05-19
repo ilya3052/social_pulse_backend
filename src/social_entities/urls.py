@@ -1,7 +1,7 @@
 from django.urls import path
 
 from social_entities.views import PlatformsView, GroupsViewByID, CheckGroupAccessView, GroupsViewBySlug, \
-    CompareGroupsView
+    CompareGroupsView, PredictiveModelsView
 
 urlpatterns = [
     path('platforms/', PlatformsView.as_view({"get": "list", "post": "create"}), name='platforms'),
@@ -13,4 +13,6 @@ urlpatterns = [
     path('groups/compare/', CompareGroupsView.as_view(), name='compare-groups'),
     path('groups/<str:slug>/', GroupsViewBySlug.as_view({"get": "retrieve"}), name='groups-retrieve'),
     path('group/check-access/', CheckGroupAccessView.as_view(), name='check-group-access'),
+
+    path('predictive-models/', PredictiveModelsView.as_view(), name='predictive-models'),
 ]
