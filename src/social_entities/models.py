@@ -62,13 +62,10 @@ class PredictiveModels(models.Model):
     )
 
     predictable_variable = models.CharField(max_length=16)
-    params = models.JSONField()
+    params = models.JSONField(max_length=512)
     model = models.CharField(max_length=128, choices=model_type)
-
     r2 = models.FloatField()
     mae = models.FloatField()
     rmse = models.FloatField()
     residual_std = models.FloatField()
-
-
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='predictive_models')
