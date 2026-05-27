@@ -70,3 +70,15 @@ class GroupReportsView(APIView):
         report_info = get_info_for_group_report(group, platform, **options)
 
         return Response(200)
+
+class CompareGroupReportView(APIView):
+    permission_classes = [IsAuthenticatedAndOwner]
+
+    context = {
+        'exclude_fields': ['last_updated_at']
+    }
+
+    def get(self, request, *args, **kwargs):
+        compare_result, status_code = compare_groups(request.GET.dict(), context=self.context)
+
+        return Response(200)
