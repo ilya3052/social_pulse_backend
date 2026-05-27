@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0005_rename_user_group_users'),
     ]
@@ -16,8 +15,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('fields', models.JSONField()),
-                ('model', models.CharField(choices=[('Ridge Regression', 'Ridge Regression'), ('Lasso Regression', 'Lasso Regression'), ('Elastic Net Regression', 'Elastic Net Regression'), ('Support Vector Regression', 'Support Vector Regression'), ('Gradient Boosting Regressor', 'Gradient Boosting Regressor')], max_length=128)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='predictive_models', to='social_entities.group')),
+                ('model', models.CharField(
+                    choices=[('Ridge Regression', 'Ridge Regression'), ('Lasso Regression', 'Lasso Regression'),
+                             ('Elastic Net Regression', 'Elastic Net Regression'),
+                             ('Support Vector Regression', 'Support Vector Regression'),
+                             ('Gradient Boosting Regressor', 'Gradient Boosting Regressor')], max_length=128)),
+                ('group',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='predictive_models',
+                                   to='social_entities.group')),
             ],
         ),
     ]

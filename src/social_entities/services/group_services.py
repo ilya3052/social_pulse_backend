@@ -1,8 +1,10 @@
+from datetime import datetime, UTC, timedelta
 from pathlib import Path
 
 import requests
 from asgiref.sync import async_to_sync, sync_to_async
 from django.db.models import Count, Q
+from django.db.models.aggregates import Sum
 from django.utils.module_loading import import_string
 from rest_framework import status
 from telethon import TelegramClient
@@ -13,8 +15,12 @@ from common.config import ENCRYPTION_KEY
 from common.utils import decrypt
 from social_auth.services import get_tg_api_session
 from social_entities.models import Group
+from social_entities.serializers import CompareGroupsSerializer
 from social_entities.utils import Status, Platforms
 from social_pulse import settings
+from stats.models import Snapshot
+from stats.serializers import SnapshotSerializer, AbsoluteStatsSerializer
+from stats.utils import format_posts_info
 
 
 def get_group_aggregated_info():
@@ -145,7 +151,8 @@ def get_vk_info(group_id, **kwargs):
 
     data = req.json()
     group_data = data.get('response').get('groups')[0]
-    return {"description": group_data.get('description'), "photo_url": group_data.get('photo_100')}
+    return {"description": group_data.get('description'), "photo_url": group_data.get('photo_100'),
+            "name": group_data.get('name')}
 
 
 @async_to_sync
@@ -186,3 +193,46 @@ def delete_group(group_obj: Group, user):
         return status.HTTP_204_NO_CONTENT
     group_obj.users.remove(user)
     return status.HTTP_204_NO_CONTENT
+
+
+def get_info_for_group_report(group, platform, **kwargs):
+    main_info = get_group_info(group.external_id, platform, **kwargs)
+
+    abs_stats = group.abs_stats.all()[0]
+    abs_stats_serialize = AbsoluteStatsSerializer(abs_stats).data
+
+    posts = group.best_posts.all()
+
+    post_info = format_posts_info(posts)
+
+    stats_info = (Snapshot.objects.prefetch_related('stats')
+                  .filter(
+        Q(type__exact='DAILY', timestamp__gte=datetime.now(tz=UTC).date() - timedelta(days=30)) |
+        Q(type__exact='HOURLY', timestamp__gte=datetime.now(tz=UTC) - timedelta(days=1)),
+        group_id=group.id)
+                  .order_by('type', 'timestamp'))
+    serialize_stats_info = SnapshotSerializer(stats_info, many=True, context={
+        'exclude_fields': ['id', 'repost_count', 'comms_count', 'ERR']}).data
+
+    return {
+        'main_info': main_info,
+        'post_info': post_info,
+        'abs_stats': abs_stats_serialize,
+        'stats_info': serialize_stats_info
+    }
+
+
+def compare_groups(request_dict, context):
+    groups_ids_str = request_dict.get('groups_ids', None)
+    if not groups_ids_str:
+        return {"error": "Не выбраны группы для сравнения"}, status.HTTP_404_NOT_FOUND
+    group_ids = list(map(int, groups_ids_str.split(',')))
+    groups = (Group.objects
+              .select_related('platform')
+              .prefetch_related('abs_stats')
+              .prefetch_related('snapshot__stats')
+              .filter(id__in=group_ids, snapshot__timestamp__gte=(datetime.now() - timedelta(days=7)).date(),
+                      snapshot__type='DAILY')
+              .annotate(increase=Sum('snapshot__stats__participants_delta')))
+    serializer = CompareGroupsSerializer(groups, many=True, context=context)
+    return serializer.data, status.HTTP_200_OK

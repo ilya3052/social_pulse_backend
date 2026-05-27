@@ -1,7 +1,7 @@
+from datetime import datetime
 from datetime import timedelta, UTC
 
 from django.db.models import QuerySet, Q
-from datetime import datetime
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,10 +16,11 @@ class SnapshotView(viewsets.ModelViewSet):
     def get_queryset(self):
         return (Snapshot.objects.prefetch_related('stats')
                 .filter(
-                    Q(type__exact='DAILY', timestamp__gte=datetime.now(tz=UTC).date() - timedelta(days=30)) |
-                          Q(type__exact='HOURLY', timestamp__gte=datetime.now(tz=UTC) - timedelta(days=1)),
-                    group_id=self.kwargs.get('group_id'))
+            Q(type__exact='DAILY', timestamp__gte=datetime.now(tz=UTC).date() - timedelta(days=30)) |
+            Q(type__exact='HOURLY', timestamp__gte=datetime.now(tz=UTC) - timedelta(days=1)),
+            group_id=self.kwargs.get('group_id'))
                 .order_by('type', 'timestamp'))
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
 

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0009_predictivemodels_mae_predictivemodels_r2_and_more'),
     ]

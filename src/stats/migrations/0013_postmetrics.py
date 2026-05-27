@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0005_rename_user_group_users'),
         ('stats', '0012_alter_snapshot_group'),
@@ -29,7 +28,8 @@ class Migration(migrations.Migration):
                 ('has_text', models.BooleanField(default=False)),
                 ('has_media', models.BooleanField(default=False)),
                 ('text_length', models.IntegerField()),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='posts', to='social_entities.group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='posts',
+                                            to='social_entities.group')),
             ],
         ),
     ]

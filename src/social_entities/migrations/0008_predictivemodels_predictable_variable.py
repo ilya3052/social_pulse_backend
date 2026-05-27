@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0007_rename_fields_predictivemodels_params'),
     ]

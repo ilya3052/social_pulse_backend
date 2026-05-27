@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('stats', '0018_rename_has_media_postmetrics_has_photo_and_more'),
     ]

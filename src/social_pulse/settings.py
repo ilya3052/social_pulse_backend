@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'service_accounts',
     'common',
     'stats',
+    'reports',
 
     'rest_framework',
     'rest_framework_simplejwt',
@@ -144,6 +145,9 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # SimpleJWT settings
 SIMPLE_JWT = {
