@@ -221,7 +221,30 @@ def get_info_for_vk_group_report(group, **kwargs):
 
 
 def get_info_for_tg_group_report(group, **kwargs):
-    pass
+    main_info = get_tg_info(group.external_id, **kwargs)
+
+    abs_stats = group.abs_stats.all()[0]
+    abs_stats_serialize = AbsoluteStatsSerializer(abs_stats).data
+
+    posts = group.best_posts.all()
+
+    post_info = format_posts_info(posts)
+
+    stats_info = (Snapshot.objects.prefetch_related('stats')
+                  .filter(
+        Q(type__exact='DAILY', timestamp__gte=datetime.now(tz=UTC).date() - timedelta(days=30)) |
+        Q(type__exact='HOURLY', timestamp__gte=datetime.now(tz=UTC) - timedelta(days=1)),
+        group_id=group.id)
+                  .order_by('type', 'timestamp'))
+    serialize_stats_info = SnapshotSerializer(stats_info, many=True, context={
+        'exclude_fields': ['id', 'repost_count', 'comms_count', 'ERR']}).data
+
+    return {
+        'main_info': main_info,
+        'post_info': post_info,
+        'abs_stats': abs_stats_serialize,
+        'stats_info': serialize_stats_info
+    }
 
 
 get_group_info_for_report_function = {
