@@ -196,7 +196,7 @@ def delete_group(group_obj: Group, user):
 def get_info_for_vk_group_report(group, **kwargs):
     main_info = get_vk_info(group.external_id, **kwargs)
 
-    abs_stats = group.abs_stats.all()
+    abs_stats = group.abs_stats.all()[0]
     abs_stats_serialize = AbsoluteStatsSerializer(abs_stats).data
 
     posts = group.best_posts.all()
