@@ -11,7 +11,7 @@ from service_accounts.services import get_service_accounts_aggregated_info, get_
     get_service_account_data
 from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
-from social_entities.services import get_group_aggregated_info, get_group_info_for_report_function
+from social_entities.services import get_group_aggregated_info, get_info_for_group_report
 from social_entities.utils import Platforms
 from social_pulse.settings import BASE_DIR
 
@@ -67,6 +67,6 @@ class GroupReportsView(APIView):
         elif "session_path" in data:
             options['session_path'] = data.get('session_path')
 
-        report_info = get_group_info_for_report_function.get(platform)(group, **options)
+        report_info = get_info_for_group_report(group, platform, **options)
 
         return Response(200)
