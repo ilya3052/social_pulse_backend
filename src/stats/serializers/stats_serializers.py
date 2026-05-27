@@ -4,6 +4,14 @@ from stats.models import Snapshot, SnapshotStats, AbsoluteStats
 
 
 class SnapshotStatsSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
+
     snapshot_id = serializers.PrimaryKeyRelatedField(
         queryset=Snapshot.objects.all(),
         source='snapshot',
@@ -18,6 +26,13 @@ class SnapshotStatsSerializer(serializers.ModelSerializer):
 
 class SnapshotSerializer(serializers.ModelSerializer):
     from social_entities.models import Group
+
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
 
     group_id = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all(),
