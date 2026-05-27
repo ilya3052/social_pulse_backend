@@ -7,8 +7,12 @@ from rest_framework.views import APIView
 
 from reports.serializers import ReportSerializer
 from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
-from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading
-from social_entities.services import get_group_aggregated_info
+from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading, \
+    get_service_account_data
+from social_entities.models import Group
+from social_entities.permissions import IsAuthenticatedAndOwner
+from social_entities.services import get_group_aggregated_info, get_group_info_for_report_function
+from social_entities.utils import Platforms
 from social_pulse.settings import BASE_DIR
 
 
@@ -40,3 +44,29 @@ class AdminReportPDFView(APIView):
         relative_path = os.path.relpath(filepath, BASE_DIR).replace('\\', '/')
 
         return Response(relative_path, status=status.HTTP_200_OK)
+
+
+class GroupReportsView(APIView):
+    permission_classes = [IsAuthenticatedAndOwner]
+
+    def get(self, request, *args, **kwargs):
+        group_id = kwargs.get('pk')
+        group = (Group.objects
+                 .prefetch_related('service_account__data')
+                 .select_related('platform')
+                 .prefetch_related('best_posts')
+                 .prefetch_related('abs_stats')
+                 .get(pk=group_id))
+        platform = Platforms(group.platform.alias)
+
+        data = get_service_account_data(group.service_account, platform)
+
+        options = {}
+        if "service_key" in data:
+            options['service_key'] = data.get('service_key')
+        elif "session_path" in data:
+            options['session_path'] = data.get('session_path')
+
+        report_info = get_group_info_for_report_function.get(platform)(group, **options)
+
+        return Response(200)
