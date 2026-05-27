@@ -25,7 +25,10 @@ class SnapshotSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    stats = SnapshotStatsSerializer(read_only=True, many=True)
+    stats = serializers.SerializerMethodField()
+
+    def get_stats(self, obj):
+        return SnapshotStatsSerializer(obj.stats.all()[0], read_only=True, context=self.context).data
 
     class Meta:
         model = Snapshot
