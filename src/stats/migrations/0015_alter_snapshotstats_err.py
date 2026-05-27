@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('stats', '0014_remove_snapshotstats_coverage_snapshotstats_err'),
     ]

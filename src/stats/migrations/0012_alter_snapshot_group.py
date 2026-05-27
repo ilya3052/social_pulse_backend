@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0005_rename_user_group_users'),
         ('stats', '0011_alter_bestpostinfo_post_id'),
@@ -15,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='snapshot',
             name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshot', to='social_entities.group'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='snapshot',
+                                    to='social_entities.group'),
         ),
     ]

@@ -11,7 +11,7 @@ class PlatformSerializer(serializers.ModelSerializer):
         for field in exclude_fields:
             fields.pop(field, None)
         return fields
-    
+
     class Meta:
         model = Platform
         fields = ('id', 'name', 'alias')

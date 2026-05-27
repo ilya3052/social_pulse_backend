@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -24,8 +23,10 @@ class Migration(migrations.Migration):
                 ('path', models.FilePathField()),
                 ('date', models.DateTimeField(default=django.utils.timezone.now)),
                 ('type', models.IntegerField()),
-                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='report', to='social_entities.group')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='group_reports', to=settings.AUTH_USER_MODEL)),
+                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
+                                            related_name='report', to='social_entities.group')),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='group_reports',
+                                              to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

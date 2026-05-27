@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class Report(models.Model):
     report_type = {
         "XLSX": "XLSX",

@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0010_rename_residual_str_predictivemodels_residual_std'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -27,8 +26,10 @@ class Migration(migrations.Migration):
                 ('path', models.CharField(max_length=512)),
                 ('date', models.DateTimeField(default=django.utils.timezone.now)),
                 ('type', models.CharField(choices=[('XLSX', 'XLSX'), ('PDF', 'PDF')], max_length=4)),
-                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='report', to='social_entities.group')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='group_reports', to=settings.AUTH_USER_MODEL)),
+                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
+                                            related_name='report', to='social_entities.group')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='group_reports',
+                                           to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

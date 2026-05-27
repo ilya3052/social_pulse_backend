@@ -47,6 +47,7 @@ class Platform(models.Model):
     alias = models.CharField(max_length=16, db_index=True)
     name = models.CharField(max_length=128)
 
+
 class PredictiveModels(models.Model):
     RIDGE = 'Ridge Regression'
     LASSO = 'Lasso Regression'

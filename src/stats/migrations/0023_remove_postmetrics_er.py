@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('stats', '0022_remove_postmetrics_is_lunch_and_more'),
     ]

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from reports.views import AdminReportPDFView, GroupReportsView
+from reports.views import AdminReportPDFView, GroupReportsView, CompareGroupReportView
 
 urlpatterns = [
     path('admin/', AdminReportPDFView.as_view(), name='admin_report'),
