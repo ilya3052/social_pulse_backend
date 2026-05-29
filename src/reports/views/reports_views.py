@@ -7,13 +7,13 @@ from rest_framework.views import APIView
 
 from reports.serializers import ReportSerializer
 from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
+from reports.utils.group_reports import generate_group_report_excel, generate_group_report_pdf
 from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading, \
     get_service_account_data
 from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.services import get_group_aggregated_info, get_info_for_group_report, compare_groups
 from social_entities.utils import Platforms
-from social_pulse.settings import BASE_DIR
 
 
 class AdminReportPDFView(APIView):
@@ -36,12 +36,10 @@ class AdminReportPDFView(APIView):
         data['filename'] = os.path.splitext(os.path.basename(filepath))[0]
         data['path'] = filepath
         data['user'] = self.request.user.id
-
         serializer = ReportSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
-        relative_path = os.path.relpath(filepath, BASE_DIR).replace('\\', '/')
 
         return Response(relative_path, status=status.HTTP_200_OK)
 
@@ -50,6 +48,7 @@ class GroupReportsView(APIView):
     permission_classes = [IsAuthenticatedAndOwner]
 
     def get(self, request, *args, **kwargs):
+        report_type = request.GET.dict().get('type', 'XLSX')
         group_id = kwargs.get('pk')
         group = (Group.objects
                  .prefetch_related('service_account__data')
@@ -57,19 +56,41 @@ class GroupReportsView(APIView):
                  .prefetch_related('best_posts')
                  .prefetch_related('abs_stats')
                  .get(pk=group_id))
+
+        self.check_object_permissions(self.request, group)
         platform = Platforms(group.platform.alias)
 
-        data = get_service_account_data(group.service_account, platform)
+        service_account_data = get_service_account_data(group.service_account, platform)
 
         options = {}
-        if "service_key" in data:
-            options['service_key'] = data.get('service_key')
-        elif "session_path" in data:
-            options['session_path'] = data.get('session_path')
+        if "service_key" in service_account_data:
+            options['service_key'] = service_account_data.get('service_key')
+        elif "session_path" in service_account_data:
+            options['session_path'] = service_account_data.get('session_path')
 
-        report_info = get_info_for_group_report(group, platform, **options)
+        report_data = get_info_for_group_report(group, platform, **options)
+        report_data['main_info']['group_name'] = group.name
+        report_data['main_info']['platform'] = platform.value
 
-        return Response(200)
+        filepath, relative_path = generate_group_report_excel(report_data)
+
+        if report_type == 'PDF':
+            filepath, relative_path = generate_group_report_pdf(filepath, group.name.replace(' ', '_'))
+
+        data = {
+            "filename": os.path.splitext(os.path.basename(filepath))[0],
+            "path": filepath,
+            "user": self.request.user.id,
+            "type": report_type,
+            "group": group.pk
+        }
+
+        serializer = ReportSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+        return Response(relative_path, status=status.HTTP_200_OK)
 
 
 class CompareGroupReportView(APIView):
