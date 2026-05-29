@@ -211,7 +211,7 @@ def generate_admin_report_excel(data):
     xlsx_path = os.path.join(MEDIA_ROOT, 'reports', 'xlsx', 'admin')
     os.makedirs(xlsx_path, exist_ok=True)
     filepath = os.path.join(xlsx_path, filename)
-    relative_path = os.path.join(MEDIA_URL, 'reports', 'xlsx', filename).replace('\\', '/')
+    relative_path = os.path.join(MEDIA_URL, 'reports', 'xlsx', 'admin', filename).replace('\\', '/')
 
     workbook = xlsxwriter.Workbook(filepath)
 
@@ -244,9 +244,9 @@ def generate_admin_report_pdf(file_path):
 
     command_convert = [
         'soffice',
-        '--headless',  # Режим без графического интерфейса
-        '--convert-to', 'pdf:calc_pdf_Export:Zoom=100',  # Формат на выходе
-        '--outdir', out_dir,  # Папка для сохранения
+        '--headless',
+        '--convert-to', 'pdf:calc_pdf_Export:Zoom=100',
+        '--outdir', out_dir,
         file_path
     ]
     base_name = os.path.splitext(os.path.basename(file_path))[0]  # имя без расширения

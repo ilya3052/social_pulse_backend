@@ -216,7 +216,7 @@ def generate_group_report_excel(report_data):
     xlsx_path = os.path.join(MEDIA_ROOT, 'reports', 'xlsx', group_name)
     os.makedirs(xlsx_path, exist_ok=True)
     filepath = os.path.join(xlsx_path, filename)
-    relative_path = os.path.join(MEDIA_URL, 'reports', 'xlsx', filename).replace('\\', '/')
+    relative_path = os.path.join(MEDIA_URL, 'reports', 'xlsx', group_name, filename).replace('\\', '/')
 
     workbook = Workbook(filepath)
     report_sheet = workbook.add_worksheet('Отчет')
@@ -249,7 +249,7 @@ def generate_group_report_pdf(file_path, folder):
         '--outdir', out_dir,
         file_path
     ]
-    base_name = os.path.splitext(os.path.basename(file_path))[0]  # имя без расширения
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
     output_path = os.path.join(out_dir, f"{base_name}.pdf")
     relative_path = os.path.join(MEDIA_URL, os.path.relpath(output_path, MEDIA_ROOT)).replace('\\', '/')
 
