@@ -1,10 +1,13 @@
 import os
+from datetime import timedelta
 
-from rest_framework import status
+from django.utils import timezone
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from reports.models import Report
 from reports.serializers import ReportSerializer
 from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
 from reports.utils.group_reports import generate_group_report_excel, generate_group_report_pdf
@@ -14,6 +17,54 @@ from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.services import get_group_aggregated_info, get_info_for_group_report, compare_groups
 from social_entities.utils import Platforms
+
+
+def _apply_period_filter(period):
+    now = timezone.now()
+    periods = {
+        'day': now - timedelta(days=1),
+        'week': now - timedelta(weeks=1),
+        'month': now - timedelta(days=30),
+        'year': now - timedelta(days=365),
+    }
+
+    if date_from := periods.get(period):
+        return {'date__gte': date_from}
+    return {}
+
+
+class UserReportsView(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedAndOwner]
+    serializer_class = ReportSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+        context['exclude_fields'] = exclude_fields
+        return context
+
+    def get_queryset(self):
+        filters = self.request.GET
+
+        field_mapping = {
+            'platform': lambda v: {'group__platform__alias': v.upper()},
+            'report_format': lambda v: {'format': v.upper()},
+        }
+
+        filters_list = {}
+        for param, mapper in field_mapping.items():
+            if value := filters.get(param):
+                filters_list.update(mapper(value))
+
+        if period := filters.get('period'):
+            period_filters = _apply_period_filter(period)
+            filters_list.update(period_filters)
+
+        queryset = Report.objects.all().select_related('group__platform').order_by('id')
+        if filters_list:
+            queryset = queryset.filter(**filters_list)
+        return queryset
 
 
 class AdminReportPDFView(APIView):
