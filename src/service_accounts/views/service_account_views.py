@@ -23,7 +23,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     queryset = ServiceAccount.objects.all()
-
+    pagination_class = None
     def destroy(self, request, *args, **kwargs):
         account_data: ServiceAccountData = ServiceAccountData.objects.get(account_id=self.kwargs.get('pk'))
         if session_path := account_data.session_path:

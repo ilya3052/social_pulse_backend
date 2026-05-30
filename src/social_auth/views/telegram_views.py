@@ -20,6 +20,7 @@ User = get_user_model()
 class TelegramBindingView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TelegramBindingSerializer
+    pagination_class = None
 
     def get_object(self):
         return self.request.user

@@ -9,3 +9,5 @@ class PlatformsView(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
+    pagination_class = None
+

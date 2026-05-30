@@ -34,6 +34,7 @@ class SnapshotView(viewsets.ModelViewSet):
     lookup_field = 'group_id'
     serializer_class = SnapshotSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class SnapshotStatsView(viewsets.ModelViewSet):
@@ -50,6 +51,7 @@ class SnapshotStatsView(viewsets.ModelViewSet):
     queryset = SnapshotStats.objects.all()
     serializer_class = SnapshotStatsSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class AbsoluteStatsView(viewsets.ModelViewSet):
@@ -67,6 +69,7 @@ class AbsoluteStatsView(viewsets.ModelViewSet):
     queryset = AbsoluteStats.objects.all()
     serializer_class = AbsoluteStatsSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class BestPostsView(APIView):
