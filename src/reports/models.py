@@ -8,6 +8,7 @@ class Report(models.Model):
         "PDF": "PDF"
     }
     report_type = {
+        'admin': 'admin',
         'by_group': 'by_group',
         'comparative': 'comparative',
     }
