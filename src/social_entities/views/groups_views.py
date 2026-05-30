@@ -138,5 +138,5 @@ class CompareGroupsView(APIView):
     }
 
     def get(self, request, *args, **kwargs):
-        compare_result, status_code = compare_groups(request.GET.dict, context=self.context)
+        compare_result, status_code = compare_groups(request.GET.dict(), context=self.context)
         return Response(compare_result, status=status_code)
