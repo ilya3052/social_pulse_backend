@@ -50,6 +50,8 @@ class UserReportsView(viewsets.ModelViewSet):
         field_mapping = {
             'platform': lambda v: {'group__platform__alias': v.upper()},
             'report_format': lambda v: {'format': v.upper()},
+            'report_type': lambda v: {'type': v},
+            'search': lambda v: {'filename__icontains': v},
         }
 
         filters_list = {}
@@ -72,7 +74,7 @@ class AdminReportPDFView(APIView):
 
     def post(self, request, *args, **kwargs):
         data = request.data
-        report_type = data.get('type', 'XLSX')
+        report_format = data.get('type', 'XLSX')
 
         report_data = {
             "service_account_loading": get_service_accounts_loading(),
@@ -81,12 +83,14 @@ class AdminReportPDFView(APIView):
         }
         filepath, relative_path = generate_admin_report_excel(report_data)
 
-        if report_type == 'PDF':
+        if report_format == 'PDF':
             filepath, relative_path = generate_admin_report_pdf(filepath)
 
         data['filename'] = os.path.splitext(os.path.basename(filepath))[0]
         data['path'] = filepath
         data['user'] = self.request.user.id
+        data['format'] = report_format
+        data['type'] = 'admin'
         serializer = ReportSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -132,7 +136,8 @@ class GroupReportsView(APIView):
             "filename": os.path.splitext(os.path.basename(filepath))[0],
             "path": filepath,
             "user": self.request.user.id,
-            "type": report_type,
+            "format": report_type,
+            "type": "by_group",
             "group": group.pk
         }
 
