@@ -15,8 +15,8 @@ class ReportSerializer(serializers.ModelSerializer):
             fields.pop(field, None)
         return fields
 
-    relative_path = serializers.SerializerMethodField()
-    platform = serializers.SerializerMethodField()
+    relative_path = serializers.SerializerMethodField(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
 
     def get_relative_path(self, obj):
         return os.path.relpath(obj.path, BASE_DIR)
