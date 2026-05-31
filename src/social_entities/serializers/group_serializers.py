@@ -64,7 +64,7 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug', 'link', 'external_id', 'added_at',
                   'platform_id', 'platform',
                   'users', 'users_ids',
-                  'service_account_id', 'abs_stats')
+                  'service_account_id', 'abs_stats', 'status')
 
 
 class CompareGroupsSerializer(serializers.Serializer):
