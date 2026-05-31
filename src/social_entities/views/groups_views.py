@@ -1,9 +1,12 @@
+import json
+
 from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from common.utils.producer import publish_task
 from service_accounts.services import get_service_account_data
 from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
@@ -61,7 +64,9 @@ class GroupsViewByID(viewsets.ModelViewSet):
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             group = serializer.save()
-            # отсюда посылается сигнал post_save
+
+            publish_task(json.dumps({"group_id": group.id}))
+
             AbsoluteStats.objects.create(group=group)
             return Response(status=status.HTTP_201_CREATED)
 
