@@ -19,11 +19,18 @@ class Group(models.Model):
             )
         ]
 
+    stats_status = {
+        'PENDING': 'PENDING',
+        'COLLECTING': 'COLLECTING',
+        'SUCCESS': 'SUCCESS',
+    }
+
     name = models.CharField(max_length=128)
     link = models.CharField(max_length=256)
     external_id = models.BigIntegerField(db_index=True)
     added_at = models.DateTimeField(default=timezone.now)
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
+    status = models.CharField(max_length=32, default="PENDING", choices=stats_status)
 
     platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
     users = models.ManyToManyField('users.CustomUser')
