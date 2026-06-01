@@ -1,7 +1,8 @@
 import os
+from heapq import heapify, heappop, heappush
 from secrets import token_hex
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from rest_framework.views import APIView
 from service_accounts.models import ServiceAccount, OneTimeToken, ServiceAccountData
 from service_accounts.permissions import ReadOnly
 from service_accounts.serializers import ServiceAccountSerializer
+from social_entities.models import Group
 
 
 class ServiceAccountsView(viewsets.ModelViewSet):
@@ -22,15 +24,44 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             permission_classes = [ReadOnly]
         return [permission() for permission in permission_classes]
 
-    queryset = ServiceAccount.objects.all()
+    def get_queryset(self):
+        return (ServiceAccount.objects
+                .select_related('data')
+                .select_related('platform')
+                .prefetch_related('groups')
+                .all())
+
     pagination_class = None
+
     def destroy(self, request, *args, **kwargs):
-        account_data: ServiceAccountData = ServiceAccountData.objects.get(account_id=self.kwargs.get('pk'))
+        instance = self.get_object()
+        queryset = self.get_queryset().filter(~Q(id=self.kwargs['pk']) & Q(platform=instance.platform))
+
+        account_groups = instance.groups.all()
+        accounts_dict = {}
+        accounts_heap = []
+
+        for acc in queryset:
+            _id = acc.id
+            accounts_heap.append([acc.groups.count(), _id])
+            accounts_dict[_id] = acc
+
+        heapify(accounts_heap)
+        groups_to_update = []
+        for group in account_groups:
+            load, account_id = heappop(accounts_heap)
+            account_to_link = accounts_dict.get(account_id)
+            group.service_account = account_to_link
+            groups_to_update.append(group)
+            heappush(accounts_heap, [load + 1, account_id])
+
+        Group.objects.bulk_update(groups_to_update, ['service_account'])
+
+        account_data: ServiceAccountData = instance.data
         if session_path := account_data.session_path:
             if os.path.exists(session_path):
                 os.remove(session_path)
-        super().destroy(request, *args, *kwargs)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, *kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         account = (
@@ -54,25 +85,6 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         serializer = ServiceAccountSerializer(account, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def get_with_groups(self, request, *args, **kwargs):
-        account = (
-            ServiceAccount.objects.filter(pk=self.kwargs.get('pk'))
-            .prefetch_related('groups')
-        ).first()
-
-        if not account:
-            return Response({"msg": "Сервисный аккаунт не найден"}, status=status.HTTP_404_NOT_FOUND)
-
-        context = {
-            'exclude_fields': [
-                'platform_id', 'data', 'app_id', 'groups_count', 'is_activated', 'name', 'id', 'platform'
-            ]
-        }
-
-        serializer = ServiceAccountSerializer(account, context=context)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
@@ -93,17 +105,6 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             {"data": serializer.data, "total_group_count": group_data.get('vk_count') + group_data.get('tg_count')},
             status=status.HTTP_200_OK)
 
-    def partial_update(self, request, *args, **kwargs):
-        instance = ServiceAccount.objects.get(pk=self.kwargs.get('pk'))
-        if not instance:
-            return Response({"msg": "Объект не найден"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ServiceAccountSerializer(instance, data=request.data, partial=True)
-
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = ServiceAccountSerializer(data=request.data)
