@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0014_alter_group_status'),
         ('stats', '0024_remove_postmetrics_has_text'),
@@ -17,7 +16,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('post_data', models.JSONField()),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='aggregated_data', to='social_entities.group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='aggregated_data',
+                                            to='social_entities.group')),
             ],
         ),
     ]

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('social_entities', '0013_group_status'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='group',
             name='status',
-            field=models.CharField(choices=[('PENDING', 'PENDING'), ('COLLECTING', 'COLLECTING'), ('SUCCESS', 'SUCCESS')], default='PENDING', max_length=32),
+            field=models.CharField(
+                choices=[('PENDING', 'PENDING'), ('COLLECTING', 'COLLECTING'), ('SUCCESS', 'SUCCESS')],
+                default='PENDING', max_length=32),
         ),
     ]

@@ -61,8 +61,7 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         if session_path := account_data.session_path:
             if os.path.exists(session_path):
                 os.remove(session_path)
-        # return super().destroy(request, *args, *kwargs)
-        return Response(status=204)
+        return super().destroy(request, *args, *kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         account = (

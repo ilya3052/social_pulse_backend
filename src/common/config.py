@@ -40,7 +40,8 @@ def get_channel(queue="abs-stats"):
     global _connection, _channel
 
     if not _is_connection_open():
-        logger.info("Подключение к RabbitMQ по адресу %s:%s", django_settings.RABBITMQ_HOST, django_settings.RABBITMQ_PORT)
+        logger.info("Подключение к RabbitMQ по адресу %s:%s", django_settings.RABBITMQ_HOST,
+                    django_settings.RABBITMQ_PORT)
         params = get_connection_params()
         _connection = BlockingConnection(params)
         _channel = _connection.channel()

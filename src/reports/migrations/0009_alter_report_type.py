@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('reports', '0008_report_type'),
     ]
@@ -13,6 +12,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='report',
             name='type',
-            field=models.CharField(choices=[('admin', 'admin'), ('by_group', 'by_group'), ('comparative', 'comparative')], max_length=16),
+            field=models.CharField(
+                choices=[('admin', 'admin'), ('by_group', 'by_group'), ('comparative', 'comparative')], max_length=16),
         ),
     ]

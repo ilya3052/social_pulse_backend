@@ -70,7 +70,7 @@ def check_vk_access(internal_data):
         group_name = group.get('name')
         group_id = group.get('id')
         contacts = group.get('contacts', None)
-
+        # return {"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status.HTTP_200_OK
         if not contacts:
             return ({"group_name": group_name, "group_id": group_id,
                      "status": Status.ContactsNotFound}, status.HTTP_404_NOT_FOUND)
@@ -102,6 +102,7 @@ async def check_tg_access(internal_data):
     async with api:
         try:
             channel: Channel = await api.get_entity(screen_name)
+            # return {"group_name": channel.title, "group_id": channel.id, "status": Status.Accepted}, status.HTTP_200_OK
             user: User = await api.get_entity(int(internal_data.get('user_social_id')))
             perm = await api.get_permissions(channel, user)
         except ValueError as VE:

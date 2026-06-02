@@ -61,10 +61,8 @@ class GroupSerializer(serializers.ModelSerializer):
         from social_entities.models import Group
 
         model = Group
-        fields = ('id', 'name', 'slug', 'link', 'external_id', 'added_at',
-                  'platform_id', 'platform',
-                  'users', 'users_ids',
-                  'service_account_id', 'abs_stats', 'status')
+        fields = ('id', 'name', 'slug', 'link', 'external_id', 'added_at', 'platform_id', 'platform', 'users',
+                  'users_ids', 'aggregated_post_data', 'service_account_id', 'abs_stats', 'status')
 
 
 class CompareGroupsSerializer(serializers.Serializer):

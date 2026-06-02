@@ -10,4 +10,3 @@ class PlatformsView(viewsets.ModelViewSet):
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
     pagination_class = None
-

@@ -16,6 +16,7 @@ html_message = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
+
 def prepare_message(token) -> str:
     url = f'https://socialpulse.sandbox.com/email/activate?token={token}'
     message = html_message % (url, url)
