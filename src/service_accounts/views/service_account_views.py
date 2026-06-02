@@ -61,7 +61,8 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         if session_path := account_data.session_path:
             if os.path.exists(session_path):
                 os.remove(session_path)
-        return super().destroy(request, *args, *kwargs)
+        # return super().destroy(request, *args, *kwargs)
+        return Response(status=204)
 
     def retrieve(self, request, *args, **kwargs):
         account = (
@@ -85,6 +86,25 @@ class ServiceAccountsView(viewsets.ModelViewSet):
         serializer = ServiceAccountSerializer(account, context=context)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_with_groups(self, request, *args, **kwargs):
+        account = (
+            ServiceAccount.objects.filter(pk=self.kwargs.get('pk'))
+            .prefetch_related('groups')
+        ).first()
+
+        if not account:
+            return Response({"msg": "Сервисный аккаунт не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        context = {
+            'exclude_fields': [
+                'platform_id', 'data', 'app_id', 'groups_count', 'is_activated', 'name', 'id', 'platform'
+            ]
+        }
+
+        serializer = ServiceAccountSerializer(account, context=context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def list(self, request, *args, **kwargs):
         accounts = (
             ServiceAccount.objects.all()
@@ -105,6 +125,17 @@ class ServiceAccountsView(viewsets.ModelViewSet):
             {"data": serializer.data, "total_group_count": group_data.get('vk_count') + group_data.get('tg_count')},
             status=status.HTTP_200_OK)
 
+    def partial_update(self, request, *args, **kwargs):
+        instance = ServiceAccount.objects.get(pk=self.kwargs.get('pk'))
+        if not instance:
+            return Response({"msg": "Объект не найден"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ServiceAccountSerializer(instance, data=request.data, partial=True)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = ServiceAccountSerializer(data=request.data)
