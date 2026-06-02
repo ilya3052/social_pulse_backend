@@ -32,6 +32,8 @@ class Group(models.Model):
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
     status = models.CharField(max_length=32, default="PENDING", choices=stats_status)
 
+    aggregated_post_data = models.JSONField(null=True, blank=True)
+
     platform = models.ForeignKey('Platform', on_delete=models.CASCADE)
     users = models.ManyToManyField('users.CustomUser')
     service_account = models.ForeignKey('service_accounts.ServiceAccount', on_delete=models.SET_NULL, null=True,
