@@ -124,6 +124,7 @@ class GroupReportsView(APIView):
             options['session_path'] = service_account_data.get('session_path')
 
         report_data = get_info_for_group_report(group, platform, **options)
+        del report_data['main_info']['photo_url']
         report_data['main_info']['group_name'] = group.name
         report_data['main_info']['platform'] = platform.value
 
