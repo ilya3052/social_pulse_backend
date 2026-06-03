@@ -1,72 +1,19 @@
 import os
-import subprocess
 from datetime import datetime
 
-import xlsxwriter
 from xlsxwriter import Workbook
 
+from reports.utils.shared_report_utils import convert_xlsx_to_pdf, make_format
 from social_pulse.settings import MEDIA_ROOT, MEDIA_URL
 
 
 def get_styles(workbook: Workbook):
-    title = workbook.add_format()
-    title.set_font_name('Times New Roman')
-    title.set_font_size(14)
-    title.set_bold()
-    title.set_align('center')
-    title.set_align('vcenter')
-    title.set_bg_color('#F8F9FA')
-    title.set_border()
-    title.set_border_color('#BFBFBF')
-
-    value = workbook.add_format()
-    value.set_font_name('Times New Roman')
-    value.set_font_size(14)
-    value.set_align('center')
-    value.set_align('vcenter')
-    value.set_bg_color('#F8F9FA')
-    value.set_border()
-    value.set_border_color('#BFBFBF')
-
-    high_load = workbook.add_format()
-    high_load.set_font_name('Times New Roman')
-    high_load.set_font_size(14)
-    high_load.set_align('center')
-    high_load.set_align('vcenter')
-    high_load.set_font_color('red')
-    high_load.set_bg_color('#F8F9FA')
-    high_load.set_border()
-    high_load.set_border_color('#BFBFBF')
-    high_load.set_num_format("0%")
-
-    medium_load = workbook.add_format()
-    medium_load.set_font_name('Times New Roman')
-    medium_load.set_font_size(14)
-    medium_load.set_align('center')
-    medium_load.set_align('vcenter')
-    medium_load.set_font_color('#ffc107')
-    medium_load.set_bg_color('#F8F9FA')
-    medium_load.set_border()
-    medium_load.set_border_color('#BFBFBF')
-    medium_load.set_num_format("0%")
-
-    low_load = workbook.add_format()
-    low_load.set_font_name('Times New Roman')
-    low_load.set_font_size(14)
-    low_load.set_align('center')
-    low_load.set_align('vcenter')
-    low_load.set_font_color('green')
-    low_load.set_bg_color('#F8F9FA')
-    low_load.set_border()
-    low_load.set_border_color('#BFBFBF')
-    low_load.set_num_format("0%")
-
-    percentage = workbook.add_format()
-    percentage.set_font_name('Times New Roman')
-    percentage.set_font_size(14)
-    percentage.set_align('center')
-    percentage.set_align('vcenter')
-    percentage.set_num_format("0%")
+    title = make_format(workbook, bold=True)
+    value = make_format(workbook)
+    high_load = make_format(workbook, font_color='red', num_format='0%')
+    medium_load = make_format(workbook, font_color='#ffc107', num_format='0%')
+    low_load = make_format(workbook, font_color='green', num_format='0%')
+    percentage = make_format(workbook, remove=['bg_color', 'border', 'border_color'], num_format='0%')
 
     return title, value, high_load, medium_load, low_load, percentage
 
@@ -171,6 +118,14 @@ def insert_service_accounts(report_sheet, data, title, value):
     report_sheet.merge_range('G23:J24', tg, value)
 
 
+def _get_load_style(percentage, low_load, medium_load, high_load):
+    if percentage < 0.3:
+        return low_load
+    if percentage < 0.7:
+        return medium_load
+    return high_load
+
+
 def insert_service_account_loading(report_sheet, account_info, groups_info, title, value, high_load, medium_load,
                                    low_load):
     _min = account_info.get('min')
@@ -180,19 +135,8 @@ def insert_service_account_loading(report_sheet, account_info, groups_info, titl
     total = vk + tg
     min_percentage = _min.get('count') / total if total else 0
     max_percentage = _max.get('count') / total if total else 0
-    if min_percentage < 0.3:
-        min_style = low_load
-    elif 0.3 <= min_percentage < 0.7:
-        min_style = medium_load
-    else:
-        min_style = high_load
-
-    if max_percentage < 0.3:
-        max_style = low_load
-    elif 0.3 <= max_percentage < 0.7:
-        max_style = medium_load
-    else:
-        max_style = high_load
+    min_style = _get_load_style(min_percentage, low_load, medium_load, high_load)
+    max_style = _get_load_style(max_percentage, low_load, medium_load, high_load)
 
     report_sheet.merge_range('B29:J29', 'Нагрузка сервисных аккаунтов', title)
 
@@ -213,7 +157,7 @@ def generate_admin_report_excel(data):
     filepath = os.path.join(xlsx_path, filename)
     relative_path = os.path.join(MEDIA_URL, 'reports', 'xlsx', 'admin', filename).replace('\\', '/')
 
-    workbook = xlsxwriter.Workbook(filepath)
+    workbook = Workbook(filepath)
 
     report_sheet = workbook.add_worksheet('Отчет')
     report_sheet.set_default_row(18.75)
@@ -239,20 +183,4 @@ def generate_admin_report_excel(data):
 
 
 def generate_admin_report_pdf(file_path):
-    out_dir = os.path.join(MEDIA_ROOT, 'reports', 'pdf', 'admin')
-    os.makedirs(out_dir, exist_ok=True)
-
-    command_convert = [
-        'soffice',
-        '--headless',
-        '--convert-to', 'pdf:calc_pdf_Export:Zoom=100',
-        '--outdir', out_dir,
-        file_path
-    ]
-    base_name = os.path.splitext(os.path.basename(file_path))[0]  # имя без расширения
-    output_path = os.path.join(out_dir, f"{base_name}.pdf")
-    relative_path = os.path.join(MEDIA_URL, os.path.relpath(output_path, MEDIA_ROOT)).replace('\\', '/')
-
-    subprocess.run(command_convert, capture_output=True, text=True, check=True)
-    os.remove(file_path)
-    return output_path, relative_path
+    return convert_xlsx_to_pdf(file_path, 'admin')

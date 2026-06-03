@@ -1,11 +1,35 @@
 import math
 import os
-import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from xlsxwriter import Workbook
 
+from reports.utils.shared_report_utils import convert_xlsx_to_pdf
 from social_pulse.settings import MEDIA_ROOT, MEDIA_URL
+
+
+def _truncate_text(text, max_len=150):
+    if not text:
+        return 'В записи отсутствует текст.'
+    if len(text) >= max_len:
+        return text[:max_len - 3] + '...'
+    return text
+
+
+def _parse_timestamp(stat, key='timestamp'):
+    _time = datetime.fromisoformat(stat.get(key).replace('Z', '+00:00'))
+    return _time.astimezone(ZoneInfo('Europe/Moscow'))
+
+
+def make_intervals(interval_values):
+    interval_values = list(map(int, interval_values))
+    start = 0
+    intervals = []
+    for value in interval_values:
+        intervals.append(f'{start}-{value}')
+        start = value
+    return intervals
 
 
 def get_styles(workbook: Workbook):
@@ -76,111 +100,139 @@ def insert_group_stats(report_sheet, stats_info, value_format):
     report_sheet.merge_range('M9:N10', stats_info.get('comms_count', 0), value_format)
 
 
+def insert_aggregated_data_graphic_section(workbook, report_sheet, data_sheet, aggregated_post_data, graphic_name, cell,
+                                           x_axis_name, data_rows):
+    keys = make_intervals(aggregated_post_data.keys())
+    values = aggregated_post_data.values()
+
+    data_len = len(values)
+
+    data_sheet.write_column(f'{data_rows[0]}1', keys)
+    data_sheet.write_column(f'{data_rows[1]}1', values)
+
+    chart = workbook.add_chart({"type": "column"})
+    chart.set_title({'name': graphic_name})
+    chart.add_series({
+        'categories': f'=Данные!${data_rows[0]}$1:${data_rows[0]}${data_len}',
+        'values': f'=Данные!${data_rows[1]}$1:${data_rows[1]}${data_len}',
+    })
+    chart.set_y_axis({'log_base': 10, 'name': 'Количество постов'})
+    chart.set_x_axis({'name': x_axis_name})
+    chart.set_size({'width': 896, 'height': 275})
+    chart.set_legend({'none': True})
+    report_sheet.insert_chart(cell, chart)
+
+
 def insert_best_post_info(report_sheet, best_post_info, value_format, post_text, mute):
-    report_sheet.merge_range('F13:I13', 'Лучшие посты за неделю', value_format)
+    report_sheet.merge_range('F76:I76', 'Лучшие посты за неделю', value_format)
 
     most_liked = best_post_info.get('most_liked', {})
-    most_liked_text = most_liked.get('text')[:147] + '...' if len(most_liked.get('text')) >= 150 else most_liked.get(
-        'text')
-    # most_liked_text = most_liked_text.replace('\n', '')
+    most_liked_text = _truncate_text(most_liked.get('text'))
     most_liked_metrics = most_liked.get('metrics', {})
 
     most_viewed = best_post_info.get('most_viewed', {})
-    most_viewed_text = most_viewed.get('text')[:147] + '...' if len(
-        most_viewed.get('text')) >= 150 else most_viewed.get(
-        'text')
-    # most_viewed_text = most_viewed_text.replace('\n', '')
+    most_viewed_text = _truncate_text(most_viewed.get('text'))
     most_viewed_metrics = most_viewed.get('metrics', {})
 
     most_reposted = best_post_info.get('most_reposted', {})
-    most_reposted_text = most_reposted.get('text')[:147] + '...' if len(
-        most_reposted.get('text')) >= 150 else most_reposted.get(
-        'text')
-    # most_reposted_text = most_reposted_text.replace('\n', '')
+    most_reposted_text = _truncate_text(most_reposted.get('text'))
     most_reposted_metrics = most_reposted.get('metrics', {})
 
     most_commented = best_post_info.get('most_commented', {})
-    most_commented_text = most_commented.get('text')[:147] + '...' if len(
-        most_commented.get('text')) >= 150 else most_commented.get(
-        'text')
-    # most_commented_text = most_commented_text.replace('\n', '')
+    most_commented_text = _truncate_text(most_commented.get('text'))
     most_commented_metrics = most_commented.get('metrics', {})
 
-    report_sheet.merge_range('B15:F15', 'Больше всего просмотров', value_format)
-    report_sheet.merge_range('B16:F21', most_viewed_text, post_text)
-    report_sheet.merge_range('B22:C22', 'Реакции', mute)
-    report_sheet.merge_range('B23:C23', most_viewed_metrics.get('likes', 0), mute)
-    report_sheet.merge_range('E22:F22', 'Репосты', mute)
-    report_sheet.merge_range('E23:F23', most_viewed_metrics.get('reposts', 0), mute)
-    report_sheet.merge_range('B24:C24', 'Комментарии', mute)
-    report_sheet.merge_range('B25:C25', most_viewed_metrics.get('comments', 0), mute)
-    report_sheet.merge_range('E24:F24', 'Просмотры', mute)
-    report_sheet.merge_range('E25:F25', most_viewed_metrics.get('views', 0), mute)
+    report_sheet.merge_range('B78:F78', 'Больше всего просмотров', value_format)
+    report_sheet.merge_range('B79:F84', most_viewed_text, post_text)
+    report_sheet.merge_range('B85:C85', 'Реакции', mute)
+    report_sheet.merge_range('B86:C86', most_viewed_metrics.get('likes', 0), mute)
+    report_sheet.merge_range('E85:F85', 'Репосты', mute)
+    report_sheet.merge_range('E86:F86', most_viewed_metrics.get('reposts', 0), mute)
+    report_sheet.merge_range('B87:C87', 'Комментарии', mute)
+    report_sheet.merge_range('B88:C88', most_viewed_metrics.get('comments', 0), mute)
+    report_sheet.merge_range('E87:F87', 'Просмотры', mute)
+    report_sheet.merge_range('E88:F88', most_viewed_metrics.get('views', 0), mute)
 
-    report_sheet.merge_range('I15:M15', 'Больше всего лайков', value_format)
-    report_sheet.merge_range('I16:M21', most_liked_text, post_text)
-    report_sheet.merge_range('I22:J22', 'Реакции', mute)
-    report_sheet.merge_range('I23:J23', most_liked_metrics.get('likes', 0), mute)
-    report_sheet.merge_range('L22:M22', 'Репосты', mute)
-    report_sheet.merge_range('L23:M23', most_liked_metrics.get('reposts', 0), mute)
-    report_sheet.merge_range('I24:J24', 'Комментарии', mute)
-    report_sheet.merge_range('I25:J25', most_liked_metrics.get('comments', 0), mute)
-    report_sheet.merge_range('L24:M24', 'Просмотры', mute)
-    report_sheet.merge_range('L25:M25', most_liked_metrics.get('views', 0), mute)
+    report_sheet.merge_range('I78:M78', 'Больше всего лайков', value_format)
+    report_sheet.merge_range('I79:M84', most_liked_text, post_text)
+    report_sheet.merge_range('I85:J85', 'Реакции', mute)
+    report_sheet.merge_range('I86:J86', most_liked_metrics.get('likes', 0), mute)
+    report_sheet.merge_range('L85:M85', 'Репосты', mute)
+    report_sheet.merge_range('L86:M86', most_liked_metrics.get('reposts', 0), mute)
+    report_sheet.merge_range('I87:J87', 'Комментарии', mute)
+    report_sheet.merge_range('I88:J88', most_liked_metrics.get('comments', 0), mute)
+    report_sheet.merge_range('L87:M87', 'Просмотры', mute)
+    report_sheet.merge_range('L88:M88', most_liked_metrics.get('views', 0), mute)
 
-    report_sheet.merge_range('B27:F27', 'Больше всего комментариев', value_format)
-    report_sheet.merge_range('B28:F33', most_commented_text, post_text)
-    report_sheet.merge_range('B34:C34', 'Реакции', mute)
-    report_sheet.merge_range('B35:C35', most_commented_metrics.get('likes', 0), mute)
-    report_sheet.merge_range('E34:F34', 'Репосты', mute)
-    report_sheet.merge_range('E35:F35', most_commented_metrics.get('reposts', 0), mute)
-    report_sheet.merge_range('B36:C36', 'Комментарии', mute)
-    report_sheet.merge_range('B37:C37', most_commented_metrics.get('comments', 0), mute)
-    report_sheet.merge_range('E36:F36', 'Просмотры', mute)
-    report_sheet.merge_range('E37:F37', most_commented_metrics.get('views', 0), mute)
+    report_sheet.merge_range('B90:F90', 'Больше всего комментариев', value_format)
+    report_sheet.merge_range('B91:F96', most_commented_text, post_text)
+    report_sheet.merge_range('B97:C97', 'Реакции', mute)
+    report_sheet.merge_range('B98:C98', most_commented_metrics.get('likes', 0), mute)
+    report_sheet.merge_range('E97:F97', 'Репосты', mute)
+    report_sheet.merge_range('E98:F98', most_commented_metrics.get('reposts', 0), mute)
+    report_sheet.merge_range('B99:C99', 'Комментарии', mute)
+    report_sheet.merge_range('B100:C100', most_commented_metrics.get('comments', 0), mute)
+    report_sheet.merge_range('E99:F99', 'Просмотры', mute)
+    report_sheet.merge_range('E100:F100', most_commented_metrics.get('views', 0), mute)
 
-    report_sheet.merge_range('I27:M27', 'Больше всего репостов', value_format)
-    report_sheet.merge_range('I28:M33', most_reposted_text, post_text)
-    report_sheet.merge_range('I34:J34', 'Реакции', mute)
-    report_sheet.merge_range('I35:J35', most_reposted_metrics.get('likes', 0), mute)
-    report_sheet.merge_range('L34:M34', 'Репосты', mute)
-    report_sheet.merge_range('L35:M35', most_reposted_metrics.get('reposts', 0), mute)
-    report_sheet.merge_range('I36:J36', 'Комментарии', mute)
-    report_sheet.merge_range('I37:J37', most_reposted_metrics.get('comments', 0), mute)
-    report_sheet.merge_range('L36:M36', 'Просмотры', mute)
-    report_sheet.merge_range('L37:M37', most_reposted_metrics.get('views', 0), mute)
+    report_sheet.merge_range('I90:M90', 'Больше всего репостов', value_format)
+    report_sheet.merge_range('I91:M96', most_reposted_text, post_text)
+    report_sheet.merge_range('I97:J97', 'Реакции', mute)
+    report_sheet.merge_range('I98:J98', most_reposted_metrics.get('likes', 0), mute)
+    report_sheet.merge_range('L97:M97', 'Репосты', mute)
+    report_sheet.merge_range('L98:M98', most_reposted_metrics.get('reposts', 0), mute)
+    report_sheet.merge_range('I99:J99', 'Комментарии', mute)
+    report_sheet.merge_range('I100:J100', most_reposted_metrics.get('comments', 0), mute)
+    report_sheet.merge_range('L99:M99', 'Просмотры', mute)
+    report_sheet.merge_range('L100:M100', most_reposted_metrics.get('views', 0), mute)
 
 
-def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value_format):
-    report_sheet.merge_range('G39:H39', 'Графики', value_format)
+def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value_format, participants_count=0):
+    report_sheet.merge_range('G51:H51', 'Графики', value_format)
 
     daily_date = []
     daily_values = []
 
-    hourly_hour = []
-    hourly_likes = []
-    hourly_views = []
+    participants_date = []
+    participants_values = []
+    # hourly_hour = []
+    # hourly_likes = []
+    # hourly_views = []
+
     for stat in stats_info:
-        if stat.get('type') == 'DAILY':
-            _time = datetime.fromisoformat(stat.get('timestamp'))
-            daily_date.append(_time.strftime("%d.%m"))
-            daily_values.append(stat.get('stats', {}).get('participants_delta', 0))
-            continue
-        _time = datetime.fromisoformat(stat.get('timestamp'))
-        hourly_hour.append(_time.strftime("%H:%M"))
-        hourly_likes.append(stat.get('stats', {}).get('likes_count', 0))
-        hourly_views.append(stat.get('stats', {}).get('views_count', 0))
+        _time = _parse_timestamp(stat)
+        daily_date.append(_time.strftime("%d.%m"))
+        stats = stat.get('stats', {})
+        daily_values.append(stats.get('participants_delta', 0))
+
+    for i in range(len(stats_info) - 1, -1, -1):
+        _time = _parse_timestamp(stats_info[i])
+        participants_date.append(_time.strftime("%d.%m"))
+
+        stats = stats_info[i].get('stats', {})
+        participants_values.append(participants_count)
+        participants_count -= stats.get('participants_delta', 0)
+
+    _time = _parse_timestamp(stats_info[0]) - timedelta(days=1)
+
+    participants_date.append(_time.strftime("%d.%m"))
+    participants_date.reverse()
+
+    participants_values.append(participants_count)
+    participants_values.reverse()
+
+        # _time = datetime.fromisoformat(stat.get('timestamp'))
+        # hourly_hour.append(_time.strftime("%H:%M"))
+        # hourly_likes.append(stat.get('stats', {}).get('likes_count', 0))
+        # hourly_views.append(stat.get('stats', {}).get('views_count', 0))
+
+    data_sheet.write_column('A1', daily_date)
+    data_sheet.write_column('B1', daily_values)
+    data_sheet.write_column('C1', participants_date)
+    data_sheet.write_column('D1', participants_values)
+
 
     daily_len = len(daily_date)
-    hourly_len = len(hourly_hour)
-
-    data_sheet.write_column(0, 0, daily_date)
-    data_sheet.write_column(0, 1, daily_values)
-
-    data_sheet.write_column(0, 3, hourly_hour)
-    data_sheet.write_column(0, 4, hourly_likes)
-    data_sheet.write_column(0, 5, hourly_views)
-
     daily_chart = workbook.add_chart({"type": "line"})
     daily_chart.set_title({'name': 'Рост подписчиков'})
     daily_chart.add_series({
@@ -188,23 +240,41 @@ def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value
         'categories': f'=Данные!$A$1:$A${daily_len}',
         'values': f'=Данные!$B$1:$B${daily_len}',
     })
-    daily_chart.set_size({'width': 384, 'height': 250})
-    report_sheet.insert_chart('A41', daily_chart)
 
-    hourly_chart = workbook.add_chart({"type": "line"})
-    hourly_chart.set_title({'name': 'Активность по часам'})
-    hourly_chart.add_series({
-        'name': 'Лайки',
-        'categories': f'=Данные!$D$1:$D${hourly_len}',
-        'values': f'=Данные!$E$1:E${hourly_len}',
+    participants_data_len = len(participants_values)
+    participants_chart = workbook.add_chart({"type": "line"})
+    participants_chart.set_title({'name': 'Прирост подписчиков по дням'})
+    participants_chart.add_series({
+        'name': 'Подписчики',
+        'categories': f'=Данные!$C$1:$C${participants_data_len}',
+        'values': f'=Данные!$D$1:$D${participants_data_len}',
     })
-    hourly_chart.add_series({
-        'name': 'Просмотры',
-        'categories': f'=Данные!$D$1:$D${hourly_len}',
-        'values': f'=Данные!$F$1:F${hourly_len}',
-    })
-    hourly_chart.set_size({'width': 384, 'height': 250})
-    report_sheet.insert_chart('I41', hourly_chart)
+
+
+    # hourly_len = len(hourly_hour)
+    # data_sheet.write_column(0, 3, hourly_hour)
+    # data_sheet.write_column(0, 4, hourly_likes)
+    # data_sheet.write_column(0, 5, hourly_views)
+
+    daily_chart.set_size({'width': 768, 'height': 250})
+    participants_chart.set_size({'width': 768, 'height': 250})
+    report_sheet.insert_chart('B53', participants_chart)
+    report_sheet.insert_chart('B64', daily_chart)
+
+    # hourly_chart = workbook.add_chart({"type": "line"})
+    # hourly_chart.set_title({'name': 'Активность по часам'})
+    # hourly_chart.add_series({
+    #     'name': 'Лайки',
+    #     'categories': f'# =Данные!$D$1:$D${hourly_len}',
+    #     'values': f'# =Данные!$E$1:E${hourly_len}',
+    # })
+    # hourly_chart.add_series({
+    #     'name': 'Просмотры',
+    #     'categories': f'=Данные!$D$1:$D${hourly_len}',
+    #     'values': f'=Данные!$F$1:F${hourly_len}',
+    # })
+    # hourly_chart.set_size({'width': 384, 'height': 250})
+    # report_sheet.insert_chart('I61', hourly_chart)
 
 
 def generate_group_report_excel(report_data):
@@ -212,6 +282,8 @@ def generate_group_report_excel(report_data):
     abs_stats_info = report_data.get('abs_stats', {})
     best_post_info = report_data.get('post_info', {})
     stats_info = report_data.get('stats_info')
+
+    aggregated_post_data = report_data.get('aggregated_post_data')
 
     platform = main_info.get('platform', 'Не указана')
     group_name = main_info.get('group_name', 'Не указано').replace(' ', '_')
@@ -226,6 +298,8 @@ def generate_group_report_excel(report_data):
     report_sheet = workbook.add_worksheet('Отчет')
     report_sheet.set_landscape()
     report_sheet.set_paper(9)
+    report_sheet.fit_to_pages(1, 0)
+    report_sheet.center_horizontally()
     report_sheet.set_default_row(18.75)
     # report_sheet.set_margins(left=0.7, right=0.7, top=0.75, bottom=0.75)
 
@@ -235,8 +309,25 @@ def generate_group_report_excel(report_data):
 
     insert_group_report_header(report_sheet, main_info, value_format)
     insert_group_stats(report_sheet, abs_stats_info, value_format)
+
+    report_sheet.merge_range('E12:J12', 'Агрегированные данные о количестве постов', value_format)
+
+    aggregated_configs = [
+        (aggregated_post_data.get('aggregated_likes_counts'),
+         'Количество постов агрегированное по количеству лайков',
+         'A14', 'Диапазон лайков', ('E', 'F')),
+        (aggregated_post_data.get('aggregated_reposts_counts'),
+         'Количество постов агрегированное по количеству репостов',
+         'A27', 'Диапазон репостов', ('I', 'J')),
+        (aggregated_post_data.get('aggregated_comments_counts'),
+         'Количество постов агрегированное по количеству комментариев',
+         'A39', 'Диапазон комментариев', ('G', 'H')),
+    ]
+    for agg_data, name, cell, x_axis, data_rows in aggregated_configs:
+        insert_aggregated_data_graphic_section(workbook, report_sheet, data_sheet,
+                                               agg_data, name, cell, x_axis, data_rows)
     insert_best_post_info(report_sheet, best_post_info, value_format, post_text, mute)
-    insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value_format)
+    insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value_format, abs_stats_info.get('participants_count', 0))
 
     workbook.close()
 
@@ -244,20 +335,4 @@ def generate_group_report_excel(report_data):
 
 
 def generate_group_report_pdf(file_path, folder):
-    out_dir = os.path.join(MEDIA_ROOT, 'reports', 'pdf', folder)
-    os.makedirs(out_dir, exist_ok=True)
-
-    command_convert = [
-        'soffice',
-        '--headless',
-        '--convert-to', 'pdf:calc_pdf_Export:Zoom=100',
-        '--outdir', out_dir,
-        file_path
-    ]
-    base_name = os.path.splitext(os.path.basename(file_path))[0]
-    output_path = os.path.join(out_dir, f"{base_name}.pdf")
-    relative_path = os.path.join(MEDIA_URL, os.path.relpath(output_path, MEDIA_ROOT)).replace('\\', '/')
-
-    subprocess.run(command_convert, capture_output=True, text=True, check=True)
-    os.remove(file_path)
-    return output_path, relative_path
+    return convert_xlsx_to_pdf(file_path, folder)

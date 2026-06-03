@@ -219,7 +219,8 @@ def get_info_for_group_report(group, platform, **kwargs):
         'main_info': main_info,
         'post_info': post_info,
         'abs_stats': abs_stats_serialize,
-        'stats_info': serialize_stats_info
+        'stats_info': serialize_stats_info,
+        'aggregated_post_data': group.aggregated_post_data
     }
 
 
