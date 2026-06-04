@@ -31,9 +31,22 @@ def get_connection_params():
 
 def _is_connection_open():
     try:
-        return _connection is not None and _connection.is_open
+        if _connection is None:
+            return False
+        return _connection.is_open and not _connection.is_closed
     except Exception:
         return False
+
+
+def reset_connection():
+    global _connection, _channel
+    if _connection is not None:
+        try:
+            _connection.close()
+        except Exception:
+            pass
+    _connection = None
+    _channel = None
 
 
 def get_channel(queue="abs-stats"):
