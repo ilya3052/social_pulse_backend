@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from common.config import SPECIAL_VK_ACC_SERVICE_KEY
 from common.utils.producer import publish_task
 from service_accounts.services import get_service_account_data
 from social_entities.models import Group
 from social_entities.permissions import IsAuthenticatedAndOwner
 from social_entities.serializers import GroupSerializer
-from social_entities.services import check_access_function, get_group_info, delete_group, compare_groups
+from social_entities.services import check_access_function, get_group_info, delete_group, compare_groups, get_post_info
 from social_entities.utils import Platforms
 from stats.models import AbsoluteStats
 
@@ -55,7 +56,8 @@ class GroupsViewByID(viewsets.ModelViewSet):
             )
         try:
             group = Group.objects.get(external_id=external_id, platform=platform)
-            group.users.add(self.request.user)
+            publish_task(json.dumps({"group_id": group.id}))
+            # group.users.add(self.request.user)
             return Response(status=status.HTTP_200_OK)
         except Group.DoesNotExist:
             data = request.data.copy()
@@ -145,3 +147,24 @@ class CompareGroupsView(APIView):
     def get(self, request, *args, **kwargs):
         compare_result, status_code = compare_groups(request.GET.dict(), context=self.context)
         return Response(compare_result, status=status_code)
+
+
+class GroupsGetPostInfoView(APIView):
+    permission_classes = [IsAuthenticatedAndOwner]
+
+    def get(self, request, *args, **kwargs):
+        group = Group.objects.select_related('platform').prefetch_related('service_account__data').get(
+            pk=self.kwargs['pk'])
+        self.check_object_permissions(request, group)
+
+        platform = Platforms(group.platform.alias)
+
+        options = {}
+        if platform == Platforms.VK:
+            options['service_key'] = SPECIAL_VK_ACC_SERVICE_KEY
+        else:
+            options['session_path'] = group.service_account.data.session_path
+
+        post_data, status_code = get_post_info(group, platform, request.GET.dict().get('post_id'), **options)
+
+        return Response(post_data, status=status_code)
