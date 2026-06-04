@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 API_ID = os.getenv('API_ID')
 API_HASH = os.getenv('API_HASH')
+SPECIAL_VK_ACC_SERVICE_KEY = os.getenv('SPECIAL_VK_ACC_SERVICE_KEY')
 
 _connection = None
 _channel = None
