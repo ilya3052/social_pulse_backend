@@ -9,14 +9,14 @@ from django.utils.module_loading import import_string
 from rest_framework import status
 from telethon import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
-from telethon.tl.types import Channel, User
+from telethon.tl.types import Channel, User, PeerChannel
 
 from common.config import ENCRYPTION_KEY
 from common.utils import decrypt
 from social_auth.services import get_tg_api_session
 from social_entities.models import Group
 from social_entities.serializers import CompareGroupsSerializer
-from social_entities.utils import Status, Platforms
+from social_entities.utils import Status, Platforms, get_item_stats
 from social_pulse import settings
 from stats.models import Snapshot
 from stats.serializers import SnapshotSerializer, AbsoluteStatsSerializer
@@ -70,7 +70,7 @@ def check_vk_access(internal_data):
         group_name = group.get('name')
         group_id = group.get('id')
         contacts = group.get('contacts', None)
-        # return {"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status.HTTP_200_OK
+        return {"group_name": group_name, "group_id": group_id, "status": Status.Accepted}, status.HTTP_200_OK
         if not contacts:
             return ({"group_name": group_name, "group_id": group_id,
                      "status": Status.ContactsNotFound}, status.HTTP_404_NOT_FOUND)
@@ -102,7 +102,7 @@ async def check_tg_access(internal_data):
     async with api:
         try:
             channel: Channel = await api.get_entity(screen_name)
-            # return {"group_name": channel.title, "group_id": channel.id, "status": Status.Accepted}, status.HTTP_200_OK
+            return {"group_name": channel.title, "group_id": channel.id, "status": Status.Accepted}, status.HTTP_200_OK
             user: User = await api.get_entity(int(internal_data.get('user_social_id')))
             perm = await api.get_permissions(channel, user)
         except ValueError as VE:
@@ -238,3 +238,63 @@ def compare_groups(request_dict, context):
               .annotate(increase=Sum('snapshot__stats__participants_delta')))
     serializer = CompareGroupsSerializer(groups, many=True, context=context)
     return serializer.data, status.HTTP_200_OK
+
+
+def get_post_info(group, platform, post_id, **kwargs):
+    info_func = get_post_info_function[platform]
+    return info_func(group, post_id, **kwargs)
+
+
+def get_vk_post_info(group, post_id, **kwargs):
+    wall_post = f'-{group.external_id}_{post_id}'
+    params = {
+        'posts': wall_post,
+        'v': 5.199
+    }
+    headers = {
+        'Authorization': f'Bearer {kwargs.get('service_key')}',
+    }
+
+    req = requests.get(
+        'https://api.vk.ru/method/wall.getById',
+        headers=headers,
+        params=params
+    )
+
+    data = req.json().get('response').get('items')[0]
+    data.pop('attachments')
+    return {
+        'id': data['id'],
+        'likes': data['likes']['count'],
+        'comments': data['comments']['count'],
+        'reposts': data['reposts']['count'],
+        'views': data['views']['count'],
+        'text': data['text'],
+        'pub_date': datetime.fromtimestamp(data['date']).date().strftime('%d.%m.%Y'),
+        'link': f'/?w={wall_post}'
+    }, 200
+
+
+@async_to_sync
+async def get_tg_post_info(group, post_id, **kwargs):
+    api: TelegramClient = get_tg_api_session(kwargs.get('session_path'))
+    async with api:
+        channel = await api.get_entity(PeerChannel(int(group.external_id)))
+        message = await api.get_messages(channel, ids=int(post_id))
+    views_count, reactions_count, replies_count, repost_count = await get_item_stats(message)
+    return {
+        'id': message.id,
+        'likes': reactions_count,
+        'comments': replies_count,
+        'reposts': repost_count,
+        'views': views_count,
+        'text': message.message,
+        'pub_date': message.date.strftime('%d.%m.%Y'),
+        'link': f'/{message.id}'
+    }, 200
+
+
+get_post_info_function = {
+    Platforms.VK: get_vk_post_info,
+    Platforms.TG: get_tg_post_info
+}
