@@ -251,6 +251,7 @@ def get_vk_post_info(group, post_id, **kwargs):
         'posts': wall_post,
         'v': 5.199
     }
+    link = f'?w=wall{wall_post}'
     headers = {
         'Authorization': f'Bearer {kwargs.get('service_key')}',
     }
@@ -271,7 +272,7 @@ def get_vk_post_info(group, post_id, **kwargs):
         'views': data['views']['count'],
         'text': data['text'],
         'pub_date': datetime.fromtimestamp(data['date']).date().strftime('%d.%m.%Y'),
-        'link': f'/?w={wall_post}'
+        'link': f'{link}'
     }, 200
 
 
