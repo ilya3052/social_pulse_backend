@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from social_auth.models import EmailActivate
-from social_auth.services import send_confirmation_email
+from social_auth.services import send_email
 from social_auth.utils import generate_short_token, prepare_message
 
 
@@ -22,7 +22,7 @@ class EmailSendMessageView(APIView):
         user = self.get_object()
         email = user.email
         token = generate_short_token()
-        message = prepare_message(token)
+        message = prepare_message(token, 'activate')
 
         email_activate_instance = EmailActivate.objects.filter(user=user).first()
         if email_activate_instance:
@@ -32,8 +32,8 @@ class EmailSendMessageView(APIView):
 
         try:
             threading.Thread(
-                target=send_confirmation_email,
-                args=(message, email),
+                target=send_email,
+                args=('Подтверждение электронной почты', message, email),
                 daemon=True
             ).start()
         except SMTPException as smtp:
