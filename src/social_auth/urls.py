@@ -9,7 +9,7 @@ urlpatterns = [
     path('email/activate/', EmailActivationView.as_view(), name='email_activate'),
 
     path('password/send-email/', SendRestorePasswordEmail.as_view(), name='password_send_email'),
-    path('password/restore/', RestorePasswordView.as_view(), name='password_restore'),
+    path('password/reset/', RestorePasswordView.as_view(), name='password_restore'),
 
     path('tg/bind/', TelegramBindingView.as_view(), name='tg_binding'),
     path('tg/callback/', TelegramCallbackView.as_view(), name='tg_callback'),
