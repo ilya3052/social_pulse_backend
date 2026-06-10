@@ -6,7 +6,6 @@ from users.models import CustomUser
 
 class IsAuthenticatedOrHasResetToken(BasePermission):
     def has_permission(self, request, view):
-        print(request.data)
         if token := request.data.get('token'):
             token_instance = ResetPassword.objects.get(token=token)
             user = CustomUser.objects.get(email=token_instance.email)
