@@ -50,8 +50,7 @@ class UserSetPasswordSerializer(serializers.Serializer):
 
     def validate(self, data):
         request = self.context.get('request')
-
-        if request.user.has_usable_password():
+        if hasattr(request.user, 'has_usable_password') and request.user.has_usable_password():
             raise serializers.ValidationError({"password_error": "Невозможно установить пароль!"})
 
         if data['new_password'] != data['confirm_password']:
