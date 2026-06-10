@@ -2,11 +2,14 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView, TokenBlacklistView
 
 from social_auth.views import EmailSendMessageView, EmailActivationView, TelegramBindingView, TelegramCallbackView, \
-    TelegramTokenPairView, TelegramConvertTokenView, VKCallbackView, VKCallbackUser
+    TelegramTokenPairView, TelegramConvertTokenView, VKCallbackView, VKCallbackUser, RestorePasswordView, SendRestorePasswordEmail
 
 urlpatterns = [
     path('email/send/', EmailSendMessageView.as_view(), name='email_send'),
     path('email/activate/', EmailActivationView.as_view(), name='email_activate'),
+
+    path('password/send-email/', SendRestorePasswordEmail.as_view(), name='password_send_email'),
+    path('password/reset/', RestorePasswordView.as_view(), name='password_restore'),
 
     path('tg/bind/', TelegramBindingView.as_view(), name='tg_binding'),
     path('tg/callback/', TelegramCallbackView.as_view(), name='tg_callback'),

@@ -33,3 +33,9 @@ class EmailActivate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     token = models.CharField(max_length=64, unique=True)
     expires_at = models.DateTimeField(default=default_expires_at)
+
+
+class ResetPassword(models.Model):
+    email = models.CharField(max_length=64, unique=True)
+    token = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField(default=default_expires_at)

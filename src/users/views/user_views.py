@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from social_entities.services import delete_group
+from users.permissions import IsAuthenticatedOrHasResetToken
 from users.serializers import UserRegisterSerializer, CustomUserSerializer, UserPasswordSerializer, \
     UserSetPasswordSerializer, UserSocialDataSerializer
 
@@ -103,10 +104,12 @@ class UserChangePasswordView(generics.UpdateAPIView):
 
 
 class UserSetPasswordView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrHasResetToken]
     serializer_class = UserSetPasswordSerializer
 
     def get_object(self):
+        if hasattr(self, 'reset_user'):
+            return self.reset_user
         return self.request.user
 
     def update(self, request, *args, **kwargs):
