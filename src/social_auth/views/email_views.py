@@ -20,9 +20,16 @@ class EmailSendMessageView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = self.get_object()
-        email = user.email
+        if request.GET.dict().get('email'):
+            email = request.GET.dict()['email']
+            _type = 'admin'
+            user.email = email
+            user.save()
+        else:
+            email = user.email
+            _type = 'activate'
         token = generate_short_token()
-        message = prepare_message(token, 'activate')
+        message = prepare_message(token, _type)
 
         email_activate_instance = EmailActivate.objects.filter(user=user).first()
         if email_activate_instance:
