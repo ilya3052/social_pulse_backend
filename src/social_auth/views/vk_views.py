@@ -64,26 +64,16 @@ class VKCallbackView(APIView):
 
         vk_token_instance = VKTokens.objects.filter(user=user).first()
 
-        if vk_token_instance and timezone.timedelta(
-                vk_token_instance.expires_in) + vk_token_instance.added_at < timezone.now():
+        if vk_token_instance:
             vk_token_instance.delete()
 
-            VKTokens.objects.create(
-                user=user,
-                refresh_vk_token=internal_refresh_token,
-                id_vk_token=internal_id_token,
-                access_vk_token=internal_access_token,
-                expires_in=expires_in,
-            )
-
-        if not vk_token_instance:
-            VKTokens.objects.create(
-                user=user,
-                refresh_vk_token=internal_refresh_token,
-                id_vk_token=internal_id_token,
-                access_vk_token=internal_access_token,
-                expires_in=expires_in,
-            )
+        VKTokens.objects.create(
+            user=user,
+            refresh_vk_token=internal_refresh_token,
+            id_vk_token=internal_id_token,
+            access_vk_token=internal_access_token,
+            expires_in=expires_in,
+        )
 
         return Response({'request': {
             'access_token': str(refresh.access_token),
