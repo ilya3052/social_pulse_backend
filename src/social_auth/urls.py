@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from social_auth.views import EmailSendMessageView, EmailActivationView, TelegramBindingView, TelegramCallbackView, \
     TelegramTokenPairView, TelegramConvertTokenView, VKCallbackView, VKCallbackUser, RestorePasswordView, SendRestorePasswordEmail
+from social_auth.views.token_view import token_blacklist_view
 
 urlpatterns = [
     path('email/send/', EmailSendMessageView.as_view(), name='email_send'),
@@ -22,5 +23,5 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
+    path('token/blacklist/', token_blacklist_view, name='token_blacklist'),
 ]
