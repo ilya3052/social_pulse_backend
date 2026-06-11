@@ -37,7 +37,7 @@ class EmailSendMessageView(APIView):
                 daemon=True
             ).start()
         except SMTPException as smtp:
-            return Response({"smtp_error": smtp})
+            return Response({"smtp_error": smtp}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"status": "Письмо с подтверждением отправлено"}, status=status.HTTP_200_OK)
 
 
