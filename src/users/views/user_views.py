@@ -37,7 +37,6 @@ class UserAPIRegistration(APIView):
 
 class UserAPIView(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
 
@@ -54,7 +53,10 @@ class UserAPIView(APIView):
         if token_serializer:
             tokens = token_serializer.data
 
-        serializer = CustomUserSerializer(user)
+        exclude_fields_str = self.request.GET.get('exclude_fields')
+        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
+
+        serializer = CustomUserSerializer(user, context={'exclude_fields': exclude_fields})
         has_password = user.has_usable_password()
         return Response({"data": serializer.data, "has_password": has_password, "tokens": tokens},
                         status=status.HTTP_200_OK)
