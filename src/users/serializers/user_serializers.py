@@ -61,10 +61,17 @@ class UserSetPasswordSerializer(serializers.Serializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    def get_fields(self):
+        fields = super().get_fields()
+        exclude_fields = self.context.get('exclude_fields', [])
+
+        for field in exclude_fields:
+            fields.pop(field, None)
+        return fields
+
     class Meta:
         model = CustomUser
-        # поле пароля оставить только в разработке, в идеале его быть не должно
-        fields = ('id', 'first_name', 'password', 'last_name', 'username',
+        fields = ('id', 'first_name', 'last_name', 'username',
                   'email', 'tg_link', 'vk_link', 'tg_id', 'vk_id', 'is_email_confirmed', 'is_staff')
         read_only_fields = ('id', 'password')
 
