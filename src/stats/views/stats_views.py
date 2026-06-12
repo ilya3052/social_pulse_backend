@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from stats.models import Snapshot, SnapshotStats, AbsoluteStats, BestPostInfo
-from stats.serializers import SnapshotSerializer, SnapshotStatsSerializer, AbsoluteStatsSerializer
+from stats.models import Snapshot, BestPostInfo
+from stats.serializers import SnapshotSerializer
 from stats.utils import format_posts_info
 
 
@@ -33,41 +33,6 @@ class SnapshotView(viewsets.ModelViewSet):
 
     lookup_field = 'group_id'
     serializer_class = SnapshotSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = None
-
-
-class SnapshotStatsView(viewsets.ModelViewSet):
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-
-        exclude_fields_str = self.request.GET.get('exclude_fields')
-        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
-
-        context['exclude_fields'] = exclude_fields
-
-        return context
-
-    queryset = SnapshotStats.objects.all()
-    serializer_class = SnapshotStatsSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = None
-
-
-class AbsoluteStatsView(viewsets.ModelViewSet):
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-
-        exclude_fields_str = self.request.GET.get('exclude_fields')
-        exclude_fields = exclude_fields_str.split(',') if exclude_fields_str else []
-
-        context['exclude_fields'] = exclude_fields
-
-        return context
-
-    lookup_field = 'group_id'
-    queryset = AbsoluteStats.objects.all()
-    serializer_class = AbsoluteStatsSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = None
 
