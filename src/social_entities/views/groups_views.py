@@ -49,6 +49,7 @@ class GroupsViewByID(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         external_id = request.data.get('external_id')
         platform = request.data.get('platform_id')
+        user = self.request.user
         if not external_id or not platform:
             return Response(
                 {"detail": "external_id и platform_id обязательны"},
@@ -56,18 +57,18 @@ class GroupsViewByID(viewsets.ModelViewSet):
             )
         try:
             group = Group.objects.get(external_id=external_id, platform=platform)
-            publish_task(json.dumps({"group_id": group.id}))
-            # group.users.add(self.request.user)
+            # publish_task(json.dumps({"group_id": group.id, 'tg_id': user.tg_id}))
+            group.users.add(user)
             return Response(status=status.HTTP_200_OK)
         except Group.DoesNotExist:
             data = request.data.copy()
-            data['users_ids'] = [self.request.user.id]
+            data['users_ids'] = [user.id]
             serializer = self.get_serializer(data=data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             group = serializer.save()
 
-            publish_task(json.dumps({"group_id": group.id}))
+            publish_task(json.dumps({"group_id": group.id, 'tg_id': user.tg_id}))
 
             AbsoluteStats.objects.create(group=group)
             return Response(status=status.HTTP_201_CREATED)
