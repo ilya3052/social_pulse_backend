@@ -7,13 +7,13 @@ from common.config import get_channel, reset_connection
 logger = logging.getLogger(__name__)
 
 
-def publish_task(message):
+def publish_task(message, queue='abs-stats'):
     for attempt in range(2):
         try:
             channel = get_channel()
             channel.basic_publish(
                 exchange='',
-                routing_key='abs-stats',
+                routing_key=queue,
                 body=message
             )
             logger.info("Message published: %s", message)
