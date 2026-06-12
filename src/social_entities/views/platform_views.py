@@ -10,3 +10,6 @@ class PlatformsView(viewsets.ModelViewSet):
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
     pagination_class = None
+
+
+platform_view = PlatformsView.as_view({'get': 'list', 'post': 'create'})

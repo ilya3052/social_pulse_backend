@@ -2,17 +2,17 @@ from datetime import datetime
 from datetime import timedelta, UTC
 
 from django.db.models import QuerySet, Q
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from stats.models import Snapshot, BestPostInfo
-from stats.serializers import SnapshotSerializer
+from stats.models import Snapshot, SnapshotStats, AbsoluteStats, BestPostInfo
+from stats.serializers import SnapshotSerializer, SnapshotStatsSerializer, AbsoluteStatsSerializer
 from stats.utils import format_posts_info
 
 
-class SnapshotView(viewsets.ModelViewSet):
+class SnapshotView(generics.ListAPIView):
     def get_queryset(self):
         return (Snapshot.objects.prefetch_related('stats')
                 .filter(
@@ -48,3 +48,6 @@ class BestPostsView(APIView):
             return Response({"error": "Статистика лучших постов пока недоступна"}, status=status.HTTP_200_OK)
         best_posts_info = format_posts_info(posts)
         return Response({**best_posts_info}, status=status.HTTP_200_OK)
+
+snapshot_view = SnapshotView.as_view()
+best_posts_view = BestPostsView.as_view()

@@ -1,7 +1,6 @@
 import requests
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -36,7 +35,7 @@ class VKCallbackView(APIView):
             headers=headers,
             params=params
         )
-        # при ошибке акцес токена возвращать на клиента ошибку и делать запрос к вк для обновления
+
         data = req.json().get('response')[0]
         vk_id = data.get('id')
         first_name = data.get('first_name')
@@ -113,3 +112,7 @@ class VKCallbackUser(APIView):
         user.vk_link = 'https://vk.ru/' + response.get('screen_name')
         user.save()
         return Response(status=status.HTTP_200_OK)
+
+
+vk_callback_view = VKCallbackView.as_view()
+vk_callback_user = VKCallbackUser.as_view()

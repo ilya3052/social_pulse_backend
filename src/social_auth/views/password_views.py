@@ -2,7 +2,7 @@ from smtplib import SMTPException
 
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,6 +14,7 @@ from users.models import CustomUser
 
 class RestorePasswordView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request, *args, **kwargs):
         token = request.GET.dict().get('token')
         token_instance = ResetPassword.objects.get(token=token)
@@ -27,6 +28,7 @@ class RestorePasswordView(APIView):
 
 class SendRestorePasswordEmail(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         token = generate_short_token()
@@ -42,3 +44,7 @@ class SendRestorePasswordEmail(APIView):
             return Response(status=status.HTTP_200_OK)
         except SMTPException as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+restore_password_view = RestorePasswordView.as_view()
+send_restore_password_email = SendRestorePasswordEmail.as_view()

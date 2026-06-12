@@ -161,3 +161,9 @@ class CompareGroupReportView(APIView):
         compare_result, status_code = compare_groups(request.GET.dict(), context=self.context)
 
         return Response(200)
+
+
+user_reports_view = UserReportsView.as_view({'get': 'list'})
+admin_report_pdf_view = AdminReportPDFView.as_view()
+group_reports_view = GroupReportsView.as_view()
+compare_groups_view = CompareGroupReportView.as_view()

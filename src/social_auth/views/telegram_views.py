@@ -117,3 +117,9 @@ class TelegramConvertTokenView(APIView):
             "access": access,
             "refresh": refresh,
         }, status=status.HTTP_200_OK)
+
+
+telegram_binding_view = TelegramBindingView.as_view()
+telegram_callback_view = TelegramCallbackView.as_view()
+telegram_token_pair_view = TelegramTokenPairView.as_view()
+telegram_convert_token_view = TelegramConvertTokenView.as_view()

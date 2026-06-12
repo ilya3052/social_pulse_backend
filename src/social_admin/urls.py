@@ -1,7 +1,7 @@
 from django.urls import path
 
-from social_admin.views import SummaryAdminPanelView
+from social_admin.views import summary_admin_panel_view
 
 urlpatterns = [
-    path('summary/', SummaryAdminPanelView.as_view(), name='summary-admin-panel'),
+    path('summary/', summary_admin_panel_view, name='summary-admin-panel'),
 ]

@@ -123,3 +123,9 @@ class ServiceAccountActivateView(APIView):
             return Response({"token": token}, status=status.HTTP_201_CREATED)
         else:
             return Response({"msg": "Недостаточно прав"}, status=status.HTTP_403_FORBIDDEN)
+
+service_accounts_list_view = ServiceAccountsListView.as_view()
+service_account_update_delete_view = ServiceAccountsUpdateDeleteView.as_view()
+service_account_retrieve_view = ServiceAccountRetrieveView.as_view()
+service_account_create_view = ServiceAccountCreateView.as_view()
+service_account_activate_view = ServiceAccountActivateView.as_view()

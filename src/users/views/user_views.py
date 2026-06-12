@@ -37,6 +37,7 @@ class UserAPIRegistration(APIView):
 
 class UserAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         user = get_object_or_404(User, id=request.user.id)
 
@@ -171,3 +172,11 @@ class UnbindSocialView(APIView):
         if not all(status_codes):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+user_api_view = UserAPIView.as_view()
+user_api_registration = UserAPIRegistration.as_view()
+user_change_password = UserChangePasswordView.as_view()
+user_set_password = UserSetPasswordView.as_view()
+user_social_data = UserSocialDataView.as_view()
+unbind_social_view = UnbindSocialView.as_view()
