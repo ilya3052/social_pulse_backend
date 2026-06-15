@@ -3,9 +3,10 @@ import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from icecream import ic
 from xlsxwriter import Workbook
 
-from reports.utils.shared_report_utils import convert_xlsx_to_pdf
+from reports.utils.shared_report_utils import convert_xlsx_to_pdf, sanitize
 from social_pulse.settings import MEDIA_ROOT, MEDIA_URL
 
 
@@ -103,7 +104,7 @@ def insert_group_stats(report_sheet, stats_info, value_format):
 def insert_aggregated_data_graphic_section(workbook, report_sheet, data_sheet, aggregated_post_data, graphic_name, cell,
                                            x_axis_name, data_rows):
     keys = make_intervals(aggregated_post_data.keys())
-    values = aggregated_post_data.values()
+    values = [aggregated_post_data[item].get('count') for item in aggregated_post_data]
 
     data_len = len(values)
 
@@ -286,7 +287,8 @@ def generate_group_report_excel(report_data):
     aggregated_post_data = report_data.get('aggregated_post_data')
 
     platform = main_info.get('platform', 'Не указана')
-    group_name = main_info.get('group_name', 'Не указано').replace(' ', '_')
+    group_name = main_info.get('group_name', 'Не указано')
+    group_name = sanitize(group_name)
 
     filename = f"{platform}_{group_name}_{datetime.now().strftime('%d.%m.%Y_%H%M%S')}.xlsx"
     xlsx_path = os.path.join(MEDIA_ROOT, 'reports', 'xlsx', group_name)

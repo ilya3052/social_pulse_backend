@@ -11,6 +11,7 @@ from reports.models import Report
 from reports.serializers import ReportSerializer
 from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
 from reports.utils.group_reports import generate_group_report_excel, generate_group_report_pdf
+from reports.utils.shared_report_utils import sanitize
 from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading, \
     get_service_account_data
 from social_entities.models import Group
@@ -131,7 +132,7 @@ class GroupReportsView(APIView):
         filepath, relative_path = generate_group_report_excel(report_data)
 
         if report_type == 'PDF':
-            filepath, relative_path = generate_group_report_pdf(filepath, group.name.replace(' ', '_'))
+            filepath, relative_path = generate_group_report_pdf(filepath, sanitize(group.name))
 
         data = {
             "filename": os.path.splitext(os.path.basename(filepath))[0],
