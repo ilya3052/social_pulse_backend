@@ -26,4 +26,4 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ('id', 'filename', 'user', 'relative_path', 'date', 'format', 'platform')
+        fields = ('id', 'filename', 'user', 'relative_path', 'path', 'date', 'format', 'platform', 'group', 'type')

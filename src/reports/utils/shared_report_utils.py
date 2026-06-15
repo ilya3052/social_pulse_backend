@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 from social_pulse.settings import MEDIA_ROOT, MEDIA_URL
@@ -42,3 +43,10 @@ def convert_xlsx_to_pdf(file_path, folder):
     subprocess.run(command_convert, capture_output=True, text=True, check=True)
     os.remove(file_path)
     return output_path, relative_path
+
+
+def sanitize(text):
+    sanitized = re.sub(r'[\\/*?:"<>|\s]', '_', text)
+    sanitized = sanitized.strip('.')
+    sanitized = re.sub(r'_+', '_', sanitized)
+    return sanitized
