@@ -15,5 +15,5 @@ urlpatterns = [
     ), name='groups-delete-update'),
     path('groups/<str:slug>/', GroupsViewBySlug.as_view({"get": "retrieve"}), name='groups-retrieve'),
 
-    path('predictive-models/', PredictiveModelsView.as_view(), name='predictive-models'),
+    path('predictive-models/<int:group_id>/', PredictiveModelsView.as_view(), name='predictive-models'),
 ]
