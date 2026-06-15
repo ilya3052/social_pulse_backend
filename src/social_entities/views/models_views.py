@@ -17,6 +17,7 @@ class PredictiveModelsView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         try:
+            self.check_permissions(request)
             group = Group.objects.select_related('platform').get(id=kwargs['group_id'])
             if group.added_at > timezone.now() - timedelta(days=2):
                 return Response({'error_cause': 'post_stats_collected'}, status=status.HTTP_404_NOT_FOUND)
