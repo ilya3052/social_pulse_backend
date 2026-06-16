@@ -1,14 +1,12 @@
 from django.urls import path
 
-from service_accounts.views import ServiceAccountsView, ServiceAccountActivateView
+from service_accounts.views import service_accounts_list_view, service_account_activate_view, \
+    service_account_update_delete_view, service_account_retrieve_view, service_account_create_view
 
 urlpatterns = [
-    path('all/', ServiceAccountsView.as_view({"get": "list"}), name='get-service-accounts-info'),
-    path('activate/<int:account_id>', ServiceAccountActivateView.as_view(), name='activate-service-account'),
-    path('<int:pk>',
-         ServiceAccountsView.as_view({"patch": "partial_update", "delete": "destroy"}),
-         name='update-service-account'),
-    path('<str:platform>', ServiceAccountsView.as_view({"get": "retrieve"}),
-         name='get-service-account'),
-    path('', ServiceAccountsView.as_view({"post": "create"}), name='create-service-account'),
+    path('all/', service_accounts_list_view, name='get-service-accounts-info'),
+    path('activate/<int:account_id>', service_account_activate_view, name='activate-service-account'),
+    path('<int:pk>', service_account_update_delete_view, name='update-delete-service-account'),
+    path('<str:platform>', service_account_retrieve_view, name='get-service-account'),
+    path('', service_account_create_view, name='create-service-account'),
 ]

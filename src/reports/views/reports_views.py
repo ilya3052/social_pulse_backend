@@ -14,7 +14,7 @@ from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
 from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading, \
     get_service_account_data
 from social_entities.models import Group
-from social_entities.permissions import IsAuthenticatedAndOwner
+from social_entities.permissions import IsOwner
 from social_entities.services import get_group_aggregated_info, get_info_for_group_report, compare_groups
 from social_entities.utils import Platforms
 
@@ -34,7 +34,7 @@ def _apply_period_filter(period):
 
 
 class UserReportsView(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedAndOwner]
+    permission_classes = [IsAuthenticated & IsOwner]
     serializer_class = ReportSerializer
 
     def get_serializer_context(self):
@@ -100,7 +100,7 @@ class AdminReportPDFView(APIView):
 
 
 class GroupReportsView(APIView):
-    permission_classes = [IsAuthenticatedAndOwner]
+    permission_classes = [IsAuthenticated & IsOwner]
 
     def get(self, request, *args, **kwargs):
         report_type = request.GET.dict().get('type', 'XLSX')
@@ -179,3 +179,9 @@ class CompareGroupReportView(APIView):
         serializer.save()
 
         return Response(relative_path, status=status.HTTP_200_OK)
+
+
+user_reports_view = UserReportsView.as_view({'get': 'list'})
+admin_report_pdf_view = AdminReportPDFView.as_view()
+group_reports_view = GroupReportsView.as_view()
+compare_groups_view = CompareGroupReportView.as_view()

@@ -67,3 +67,7 @@ class EmailActivationView(APIView):
         user.save()
         token_pair.delete()
         return Response({"status": "Email подтвержден"}, status=status.HTTP_200_OK)
+
+
+email_send_message_view = EmailSendMessageView.as_view()
+email_activation_view = EmailActivationView.as_view()

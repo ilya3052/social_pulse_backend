@@ -25,3 +25,5 @@ class SummaryAdminPanelView(APIView):
                 **service_account_loading
             }
         }, status=status.HTTP_200_OK)
+
+summary_admin_panel_view = SummaryAdminPanelView.as_view()

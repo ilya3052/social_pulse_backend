@@ -1,8 +1,8 @@
 from django.urls import path
 
-from stats.views import BestPostsView, SnapshotView
+from stats.views import best_posts_view, snapshot_view
 
 urlpatterns = [
-    path('<int:group_id>/best/', BestPostsView.as_view()),
-    path('<int:group_id>/', SnapshotView.as_view({"get": "list"}))
+    path('<int:group_id>/best/', best_posts_view),
+    path('<int:group_id>/', snapshot_view)
 ]
