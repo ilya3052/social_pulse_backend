@@ -196,9 +196,6 @@ def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value
 
     participants_date = []
     participants_values = []
-    # hourly_hour = []
-    # hourly_likes = []
-    # hourly_views = []
 
     for stat in stats_info:
         _time = _parse_timestamp(stat)
@@ -221,11 +218,6 @@ def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value
 
     participants_values.append(participants_count)
     participants_values.reverse()
-
-        # _time = datetime.fromisoformat(stat.get('timestamp'))
-        # hourly_hour.append(_time.strftime("%H:%M"))
-        # hourly_likes.append(stat.get('stats', {}).get('likes_count', 0))
-        # hourly_views.append(stat.get('stats', {}).get('views_count', 0))
 
     data_sheet.write_column('A1', daily_date)
     data_sheet.write_column('B1', daily_values)
@@ -252,30 +244,10 @@ def insert_graphic_section(workbook, report_sheet, data_sheet, stats_info, value
     })
 
 
-    # hourly_len = len(hourly_hour)
-    # data_sheet.write_column(0, 3, hourly_hour)
-    # data_sheet.write_column(0, 4, hourly_likes)
-    # data_sheet.write_column(0, 5, hourly_views)
-
     daily_chart.set_size({'width': 768, 'height': 250})
     participants_chart.set_size({'width': 768, 'height': 250})
     report_sheet.insert_chart('B53', participants_chart)
     report_sheet.insert_chart('B64', daily_chart)
-
-    # hourly_chart = workbook.add_chart({"type": "line"})
-    # hourly_chart.set_title({'name': 'Активность по часам'})
-    # hourly_chart.add_series({
-    #     'name': 'Лайки',
-    #     'categories': f'# =Данные!$D$1:$D${hourly_len}',
-    #     'values': f'# =Данные!$E$1:E${hourly_len}',
-    # })
-    # hourly_chart.add_series({
-    #     'name': 'Просмотры',
-    #     'categories': f'=Данные!$D$1:$D${hourly_len}',
-    #     'values': f'=Данные!$F$1:F${hourly_len}',
-    # })
-    # hourly_chart.set_size({'width': 384, 'height': 250})
-    # report_sheet.insert_chart('I61', hourly_chart)
 
 
 def generate_group_report_excel(report_data):
