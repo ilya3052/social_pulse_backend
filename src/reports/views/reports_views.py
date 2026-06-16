@@ -179,3 +179,9 @@ class CompareGroupReportView(APIView):
         serializer.save()
 
         return Response(relative_path, status=status.HTTP_200_OK)
+
+
+user_reports_view = UserReportsView.as_view({'get': 'list'})
+admin_report_pdf_view = AdminReportPDFView.as_view()
+group_reports_view = GroupReportsView.as_view()
+compare_groups_view = CompareGroupReportView.as_view()
