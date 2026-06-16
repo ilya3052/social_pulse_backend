@@ -3,15 +3,14 @@ from datetime import timedelta
 
 from django.utils import timezone
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from reports.models import Report
 from reports.serializers import ReportSerializer
-from reports.utils import generate_admin_report_excel, generate_admin_report_pdf
-from reports.utils.group_reports import generate_group_report_excel, generate_group_report_pdf
-from reports.utils.shared_report_utils import sanitize
+from reports.utils import generate_admin_report_excel, generate_admin_report_pdf, generate_group_report_excel, \
+    generate_group_report_pdf, sanitize, generate_comparative_report_excel, convert_xlsx_to_pdf
 from service_accounts.services import get_service_accounts_aggregated_info, get_service_accounts_loading, \
     get_service_account_data
 from social_entities.models import Group
@@ -152,13 +151,31 @@ class GroupReportsView(APIView):
 
 
 class CompareGroupReportView(APIView):
-    permission_classes = [IsAuthenticatedAndOwner]
+    permission_classes = [IsAuthenticated]
 
     context = {
         'exclude_fields': ['last_updated_at']
     }
 
     def get(self, request, *args, **kwargs):
-        compare_result, status_code = compare_groups(request.GET.dict(), context=self.context)
+        report_type = request.GET.dict().get('type', 'XLSX')
+        compare_result, _ = compare_groups(request.GET.dict(), context=self.context)
+        filepath, relative_path = generate_comparative_report_excel(compare_result)
 
-        return Response(200)
+        if report_type == 'PDF':
+            filepath, relative_path = convert_xlsx_to_pdf(filepath, 'comparative')
+
+        data = {
+            "filename": os.path.splitext(os.path.basename(filepath))[0],
+            "path": filepath,
+            "user": self.request.user.id,
+            "format": report_type,
+            "type": "comparative",
+        }
+
+        serializer = ReportSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+        return Response(relative_path, status=status.HTTP_200_OK)
