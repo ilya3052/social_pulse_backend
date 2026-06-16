@@ -22,7 +22,9 @@ class ReportSerializer(serializers.ModelSerializer):
         return os.path.relpath(obj.path, BASE_DIR)
 
     def get_platform(self, obj):
-        return obj.group.platform.alias
+        if not obj:
+            return obj.group.platform.alias
+        return '-'
 
     class Meta:
         model = Report
