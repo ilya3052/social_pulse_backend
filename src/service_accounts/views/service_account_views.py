@@ -83,7 +83,7 @@ class ServiceAccountRetrieveView(ServiceAccountsViewMixin, generics.RetrieveAPIV
     def retrieve(self, request, *args, **kwargs):
         account = (
             self.get_queryset()
-            .filter(platform__alias=self.kwargs.get('platform'))
+            .filter(platform__alias=self.kwargs.get('platform'), is_activated=True)
             .annotate(
                 groups_count=Count('groups')
             )

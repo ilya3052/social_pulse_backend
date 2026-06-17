@@ -28,3 +28,9 @@ dependencies = [
 dev = [
     "icecream>=2.2.0",
 ]
+linux = [
+    "gunicorn>=26.0.0",
+]
+windows = [
+    "waitress>=3.0.2",
+]
