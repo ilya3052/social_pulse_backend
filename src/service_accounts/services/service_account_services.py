@@ -28,6 +28,19 @@ def get_service_accounts_loading():
 
     min_l_acc: ServiceAccount = accounts.order_by('groups_count', 'name').first()
     max_l_acc: ServiceAccount = accounts.order_by('-groups_count', '-name').first()
+    if not min_l_acc and not max_l_acc:
+        return {
+            "min": {
+                "id": '',
+                "name": 0,
+                "count": 0
+            },
+            "max": {
+                "id": '',
+                "name": 0,
+                "count": 0
+            },
+        }
 
     return {
         "min": {

@@ -43,7 +43,7 @@ class GroupSerializer(serializers.ModelSerializer):
         source='platform',
         write_only=True
     )
-    users = CustomUserSerializer(read_only=True, many=True)  # а надо ли возвращать?
+    users = CustomUserSerializer(read_only=True, many=True)
     users_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='users',

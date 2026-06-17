@@ -14,7 +14,6 @@ class DebugView(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
 
-        # пробуем распарсить вложенные JSON-строки
         parsed_data = {
             key: try_parse_json(value)
             for key, value in data.items()

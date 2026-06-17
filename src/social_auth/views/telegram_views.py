@@ -80,7 +80,6 @@ class TelegramCallbackView(APIView):
                 return Response({'error': f'Ошибка создания пользователя: {str(ie)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        # попытаться получить актуальные токены для юзера если он существует
         refresh = RefreshToken.for_user(user)
 
         return Response({

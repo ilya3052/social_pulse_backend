@@ -5,10 +5,6 @@ from datetime import datetime
 
 
 class HtmlDebugFileHandler(logging.FileHandler):
-    """
-    Если в сообщении обнаружен HTML-документ (django debug page),
-    сохраняет его в отдельный .html файл.
-    """
 
     def emit(self, record: logging.LogRecord):
         try:
@@ -16,7 +12,7 @@ class HtmlDebugFileHandler(logging.FileHandler):
 
             html_content = None
 
-            # Если сообщение — JSON с debug_message
+
             try:
                 parsed = json.loads(message)
                 debug_message = parsed.get("debug_message")
@@ -25,7 +21,7 @@ class HtmlDebugFileHandler(logging.FileHandler):
             except Exception:
                 pass
 
-            # Если просто строка с html
+
             if not html_content and "<html" in message.lower():
                 html_content = message
 
@@ -40,7 +36,7 @@ class HtmlDebugFileHandler(logging.FileHandler):
                 with open(html_path, "w", encoding="utf-8") as f:
                     f.write(html_content)
 
-                return  # НЕ пишем в основной лог
+                return
 
         except Exception:
             pass
